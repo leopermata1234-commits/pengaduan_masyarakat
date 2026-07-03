@@ -21,7 +21,7 @@ new #[Title('Tambah Dokumentasi')] class extends Component
     public function informasiKegiatan()
     {
         return ProgramBanjar::query()
-            ->where('status', ProgramBanjar::STATUS_SELESAI)
+            ->where('status', ProgramBanjar::STATUS_PUBLISHED)
             ->orderByDesc('tanggal')
             ->get();
     }
@@ -45,7 +45,7 @@ new #[Title('Tambah Dokumentasi')] class extends Component
         $validated = $this->validate([
             'program_banjar_id' => [
                 'required',
-                Rule::exists('program_banjar', 'id')->where(fn ($query) => $query->where('status', ProgramBanjar::STATUS_SELESAI)),
+                Rule::exists('program_banjar', 'id')->where(fn ($query) => $query->where('status', ProgramBanjar::STATUS_PUBLISHED)),
             ],
             'fotos' => ['required', 'array', 'min:1'],
             'fotos.*' => ['image', 'max:2048'],
@@ -69,6 +69,8 @@ new #[Title('Tambah Dokumentasi')] class extends Component
             'fotos' => $storedFotos,
         ]);
 
+        $informasi->update(['status' => ProgramBanjar::STATUS_SELESAI]);
+
         $this->redirectRoute('dokumentasi.index', navigate: true);
     }
 };
@@ -85,7 +87,7 @@ new #[Title('Tambah Dokumentasi')] class extends Component
     </div>
 
     <form wire:submit="save" class="space-y-5 rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900">
-        <flux:select wire:model.live="program_banjar_id" :label="__('Informasi Kegiatan Selesai')">
+        <flux:select wire:model.live="program_banjar_id" :label="__('Informasi Kegiatan Published')">
             <flux:select.option value="">{{ __('Pilih informasi kegiatan') }}</flux:select.option>
             @foreach ($this->informasiKegiatan as $informasi)
                 <flux:select.option value="{{ $informasi->id }}">{{ $informasi->judul }} - {{ $informasi->tanggal->format('d M Y') }}</flux:select.option>

@@ -498,11 +498,15 @@ Admin
 
 ↓
 
-Pilih Informasi Kegiatan dengan status Selesai
+Pilih Informasi Kegiatan dengan status Published
 
 ↓
 
 Upload satu atau lebih foto bukti kegiatan
+
+↓
+
+Status Informasi Kegiatan menjadi Selesai
 
 ↓
 
