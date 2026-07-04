@@ -4,6 +4,7 @@ use App\Models\DokumentasiKegiatan;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
@@ -53,6 +54,19 @@ new #[Title('Dokumentasi')] class extends Component
         $this->resetPage();
     }
 
+    /**
+     * @return array<int, string>
+     */
+    public function fotoPaths(DokumentasiKegiatan $dokumentasi): array
+    {
+        return $dokumentasi->fotos ?? ($dokumentasi->foto ? [$dokumentasi->foto] : []);
+    }
+
+    public function fotoUrl(string $foto): string
+    {
+        return '/storage/'.Str::of($foto)->ltrim('/');
+    }
+
 };
 ?>
 
@@ -84,7 +98,29 @@ new #[Title('Dokumentasi')] class extends Component
                             <td class="px-4 py-3 font-medium text-zinc-950 dark:text-white">{{ $item->programBanjar?->judul ?? $item->judul }}</td>
                             <td class="px-4 py-3 text-zinc-600 dark:text-zinc-300">{{ $item->tanggal->format('d M Y') }}</td>
                             <td class="max-w-md truncate px-4 py-3 text-zinc-600 dark:text-zinc-300">{{ $item->programBanjar?->deskripsi ?? $item->deskripsi }}</td>
-                            <td class="px-4 py-3 text-zinc-600 dark:text-zinc-300">{{ count($item->fotos ?? ($item->foto ? [$item->foto] : [])) }}</td>
+                            <td class="px-4 py-3">
+                                @php($fotoPaths = $this->fotoPaths($item))
+
+                                @if ($fotoPaths)
+                                    <div class="flex items-center gap-2">
+                                        @foreach (array_slice($fotoPaths, 0, 3) as $foto)
+                                            <a href="{{ $this->fotoUrl($foto) }}" target="_blank" class="block">
+                                                <img
+                                                    src="{{ $this->fotoUrl($foto) }}"
+                                                    alt="{{ $item->judul }}"
+                                                    class="h-14 w-20 rounded-md border border-zinc-200 object-cover dark:border-zinc-700"
+                                                >
+                                            </a>
+                                        @endforeach
+
+                                        @if (count($fotoPaths) > 3)
+                                            <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400">+{{ count($fotoPaths) - 3 }}</span>
+                                        @endif
+                                    </div>
+                                @else
+                                    <span class="text-zinc-500 dark:text-zinc-400">{{ __('Tidak ada foto') }}</span>
+                                @endif
+                            </td>
                             <td class="px-4 py-3"><div class="flex justify-end gap-1">
                                 @can('dokumentasi.edit')<flux:button size="sm" variant="ghost" icon="pencil" :href="route('dokumentasi.edit', $item)" wire:navigate />@endcan
                                 @can('dokumentasi.delete')<flux:button size="sm" variant="ghost" icon="trash" wire:click="delete({{ $item->id }})" wire:confirm="{{ __('Hapus dokumentasi ini?') }}" />@endcan

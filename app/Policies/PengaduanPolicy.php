@@ -18,7 +18,9 @@ class PengaduanPolicy
             return false;
         }
 
-        return ! $user->hasRole('Masyarakat') || $pengaduan->user_id === $user->id;
+        return ! $user->hasRole('Masyarakat')
+            || $pengaduan->user_id === $user->id
+            || $pengaduan->visibilitas === Pengaduan::VISIBILITAS_PUBLIK;
     }
 
     public function create(User $user): bool

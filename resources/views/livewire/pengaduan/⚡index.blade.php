@@ -35,7 +35,7 @@ new #[Title('Pengaduan')] class extends Component
     {
         return Pengaduan::query()
             ->with('user')
-            ->when(auth()->user()->hasRole('Masyarakat'), fn (Builder $query) => $query->where('user_id', auth()->id()))
+            ->visibleTo(auth()->user())
             ->when($this->search !== '', fn (Builder $query) => $query
                 ->where(fn (Builder $query) => $query
                     ->where('judul', 'like', "%{$this->search}%")
@@ -95,6 +95,7 @@ new #[Title('Pengaduan')] class extends Component
                         <th class="px-4 py-3">{{ __('Judul') }}</th>
                         <th class="px-4 py-3">{{ __('Pelapor') }}</th>
                         <th class="px-4 py-3">{{ __('Status') }}</th>
+                        <th class="px-4 py-3">{{ __('Visibilitas') }}</th>
                         <th class="px-4 py-3">{{ __('Tanggal') }}</th>
                         <th class="w-40 px-4 py-3 text-right">{{ __('Aksi') }}</th>
                     </tr>
@@ -105,6 +106,7 @@ new #[Title('Pengaduan')] class extends Component
                             <td class="px-4 py-3 font-medium text-zinc-950 dark:text-white">{{ $item->judul }}</td>
                             <td class="px-4 py-3 text-zinc-600 dark:text-zinc-300">{{ $item->user->name }}</td>
                             <td class="px-4 py-3 text-zinc-600 dark:text-zinc-300">{{ $item->status }}</td>
+                            <td class="px-4 py-3 text-zinc-600 dark:text-zinc-300">{{ $item->visibilitas }}</td>
                             <td class="px-4 py-3 text-zinc-600 dark:text-zinc-300">{{ $item->created_at->format('d M Y') }}</td>
                             <td class="px-4 py-3">
                                 <div class="flex justify-end gap-1">
@@ -119,7 +121,7 @@ new #[Title('Pengaduan')] class extends Component
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="5" class="px-4 py-8 text-center text-zinc-500">{{ __('Data pengaduan tidak ditemukan.') }}</td></tr>
+                        <tr><td colspan="6" class="px-4 py-8 text-center text-zinc-500">{{ __('Data pengaduan tidak ditemukan.') }}</td></tr>
                     @endforelse
                 </tbody>
             </table>

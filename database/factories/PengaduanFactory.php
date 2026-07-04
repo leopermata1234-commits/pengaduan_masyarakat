@@ -24,6 +24,7 @@ class PengaduanFactory extends Factory
             'isi_pengaduan' => fake()->paragraph(),
             'foto' => null,
             'status' => fake()->randomElement(Pengaduan::STATUSES),
+            'visibilitas' => fake()->randomElement(Pengaduan::VISIBILITAS),
         ];
     }
 

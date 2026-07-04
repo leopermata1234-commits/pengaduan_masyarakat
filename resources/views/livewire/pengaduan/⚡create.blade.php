@@ -2,6 +2,7 @@
 
 use App\Models\Pengaduan;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
@@ -15,6 +16,8 @@ new #[Title('Buat Pengaduan')] class extends Component
 
     public string $isi_pengaduan = '';
 
+    public string $visibilitas = Pengaduan::VISIBILITAS_PRIVAT;
+
     public ?TemporaryUploadedFile $foto = null;
 
     public function save(): void
@@ -24,6 +27,7 @@ new #[Title('Buat Pengaduan')] class extends Component
         $validated = $this->validate([
             'judul' => ['required', 'string', 'max:255'],
             'isi_pengaduan' => ['required', 'string'],
+            'visibilitas' => ['required', Rule::in(Pengaduan::VISIBILITAS)],
             'foto' => ['nullable', 'image', 'max:2048'],
         ]);
 
@@ -33,6 +37,7 @@ new #[Title('Buat Pengaduan')] class extends Component
             'isi_pengaduan' => $validated['isi_pengaduan'],
             'foto' => $this->foto?->store('pengaduan', 'public'),
             'status' => Pengaduan::STATUS_PENDING,
+            'visibilitas' => $validated['visibilitas'],
         ]);
 
         $this->redirectRoute('pengaduan.index', navigate: true);
@@ -48,6 +53,11 @@ new #[Title('Buat Pengaduan')] class extends Component
     <form wire:submit="save" class="space-y-5 rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900">
         <flux:input wire:model="judul" :label="__('Judul')" required />
         <flux:textarea wire:model="isi_pengaduan" :label="__('Isi Pengaduan')" rows="6" required />
+        <flux:select wire:model="visibilitas" :label="__('Visibilitas')">
+            @foreach (Pengaduan::VISIBILITAS as $visibilitasOption)
+                <flux:select.option value="{{ $visibilitasOption }}">{{ $visibilitasOption }}</flux:select.option>
+            @endforeach
+        </flux:select>
         <flux:input wire:model="foto" :label="__('Foto')" type="file" accept="image/*" />
         <div class="flex justify-end gap-2">
             <flux:button variant="filled" :href="route('pengaduan.index')" wire:navigate>{{ __('Batal') }}</flux:button>

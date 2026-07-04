@@ -3,6 +3,7 @@
 use App\Models\ProgramBanjar;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
@@ -18,6 +19,18 @@ new #[Title('Tambah Informasi Kegiatan')] class extends Component
     public string $status = ProgramBanjar::STATUS_DRAFT;
     public ?TemporaryUploadedFile $gambar = null;
 
+    /**
+     * @return array<int, string>
+     */
+    #[Computed]
+    public function statusOptions(): array
+    {
+        return [
+            ProgramBanjar::STATUS_DRAFT,
+            ProgramBanjar::STATUS_PUBLISHED,
+        ];
+    }
+
     public function save(): void
     {
         Gate::authorize('create', ProgramBanjar::class);
@@ -26,7 +39,7 @@ new #[Title('Tambah Informasi Kegiatan')] class extends Component
             'judul' => ['required', 'string', 'max:255'],
             'deskripsi' => ['required', 'string'],
             'tanggal' => ['required', 'date'],
-            'status' => ['required', Rule::in(ProgramBanjar::STATUSES)],
+            'status' => ['required', Rule::in($this->statusOptions)],
             'gambar' => ['nullable', 'image', 'max:2048'],
         ]);
 
@@ -50,7 +63,7 @@ new #[Title('Tambah Informasi Kegiatan')] class extends Component
         <flux:input wire:model="judul" :label="__('Judul')" required />
         <flux:textarea wire:model="deskripsi" :label="__('Deskripsi')" rows="6" required />
         <flux:input wire:model="tanggal" :label="__('Tanggal')" type="date" required />
-        <flux:select wire:model="status" :label="__('Status')">@foreach (ProgramBanjar::STATUSES as $statusOption)<flux:select.option value="{{ $statusOption }}">{{ $statusOption }}</flux:select.option>@endforeach</flux:select>
+        <flux:select wire:model="status" :label="__('Status')">@foreach ($this->statusOptions as $statusOption)<flux:select.option value="{{ $statusOption }}">{{ $statusOption }}</flux:select.option>@endforeach</flux:select>
         <flux:input wire:model="gambar" :label="__('Gambar')" type="file" accept="image/*" />
         <div class="flex justify-end gap-2"><flux:button variant="filled" :href="route('program.index')" wire:navigate>{{ __('Batal') }}</flux:button><flux:button type="submit" variant="primary">{{ __('Simpan') }}</flux:button></div>
     </form>

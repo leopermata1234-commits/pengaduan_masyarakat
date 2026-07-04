@@ -82,6 +82,8 @@ new #[Title('Detail Pengaduan')] class extends Component
             <div class="rounded-lg border border-zinc-200 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-900">
                 <p class="text-sm text-zinc-500">{{ __('Status Saat Ini') }}</p>
                 <p class="mt-1 text-lg font-semibold text-zinc-950 dark:text-white">{{ $pengaduan->status }}</p>
+                <p class="mt-4 text-sm text-zinc-500">{{ __('Visibilitas') }}</p>
+                <p class="mt-1 text-lg font-semibold text-zinc-950 dark:text-white">{{ $pengaduan->visibilitas }}</p>
                 @can('pengaduan.verify')
                     <form wire:submit="saveStatus" class="mt-4 space-y-3">
                         <flux:select wire:model="status" :label="__('Ubah Status')">

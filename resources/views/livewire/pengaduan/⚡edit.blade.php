@@ -21,6 +21,8 @@ new #[Title('Edit Pengaduan')] class extends Component
 
     public string $status = '';
 
+    public string $visibilitas = Pengaduan::VISIBILITAS_PRIVAT;
+
     public ?TemporaryUploadedFile $foto = null;
 
     public function mount(Pengaduan $pengaduan): void
@@ -31,6 +33,7 @@ new #[Title('Edit Pengaduan')] class extends Component
         $this->judul = $pengaduan->judul;
         $this->isi_pengaduan = $pengaduan->isi_pengaduan;
         $this->status = $pengaduan->status;
+        $this->visibilitas = $pengaduan->visibilitas;
     }
 
     public function save(): void
@@ -41,6 +44,7 @@ new #[Title('Edit Pengaduan')] class extends Component
             'judul' => ['required', 'string', 'max:255'],
             'isi_pengaduan' => ['required', 'string'],
             'status' => ['required', Rule::in(Pengaduan::STATUSES)],
+            'visibilitas' => ['required', Rule::in(Pengaduan::VISIBILITAS)],
             'foto' => ['nullable', 'image', 'max:2048'],
         ]);
 
@@ -48,6 +52,7 @@ new #[Title('Edit Pengaduan')] class extends Component
             'judul' => $validated['judul'],
             'isi_pengaduan' => $validated['isi_pengaduan'],
             'status' => $validated['status'],
+            'visibilitas' => $validated['visibilitas'],
         ];
 
         if ($this->foto) {
@@ -75,6 +80,11 @@ new #[Title('Edit Pengaduan')] class extends Component
         <flux:select wire:model="status" :label="__('Status')">
             @foreach (Pengaduan::STATUSES as $statusOption)
                 <flux:select.option value="{{ $statusOption }}">{{ $statusOption }}</flux:select.option>
+            @endforeach
+        </flux:select>
+        <flux:select wire:model="visibilitas" :label="__('Visibilitas')">
+            @foreach (Pengaduan::VISIBILITAS as $visibilitasOption)
+                <flux:select.option value="{{ $visibilitasOption }}">{{ $visibilitasOption }}</flux:select.option>
             @endforeach
         </flux:select>
         <flux:input wire:model="foto" :label="__('Ganti Foto')" type="file" accept="image/*" />

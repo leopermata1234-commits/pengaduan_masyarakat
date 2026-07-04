@@ -43,14 +43,7 @@ new #[Title('Dashboard')] class extends Component
 
     private function pengaduanQuery(): Builder
     {
-        $query = Pengaduan::query();
-        $user = Auth::user();
-
-        if ($user?->hasRole('Masyarakat')) {
-            $query->where('user_id', $user->id);
-        }
-
-        return $query;
+        return Pengaduan::query()->visibleTo(Auth::user());
     }
 };
 ?>
@@ -110,7 +103,7 @@ new #[Title('Dashboard')] class extends Component
                 <div class="flex flex-col gap-2 px-5 py-4 md:flex-row md:items-center md:justify-between">
                     <div>
                         <p class="font-medium text-zinc-950 dark:text-white">{{ $pengaduan->judul }}</p>
-                        <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">{{ $pengaduan->user->name }} · {{ $pengaduan->created_at->format('d M Y') }}</p>
+                        <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">{{ $pengaduan->user->name }} · {{ $pengaduan->created_at->format('d M Y') }} · {{ $pengaduan->visibilitas }}</p>
                     </div>
                     <span class="inline-flex w-fit rounded-md border border-zinc-200 px-2 py-1 text-xs font-medium text-zinc-700 dark:border-zinc-700 dark:text-zinc-200">
                         {{ $pengaduan->status }}

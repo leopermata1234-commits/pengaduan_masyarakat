@@ -42,6 +42,7 @@ class LayananMasyarakatSeeder extends Seeder
                     'judul' => 'Lampu jalan mati di area bale banjar',
                     'isi_pengaduan' => 'Mohon bantuan pengecekan lampu jalan karena area menjadi gelap saat malam.',
                     'status' => Pengaduan::STATUS_DIPROSES,
+                    'visibilitas' => Pengaduan::VISIBILITAS_PUBLIK,
                 ]);
 
             TanggapanPengaduan::factory()
@@ -57,6 +58,7 @@ class LayananMasyarakatSeeder extends Seeder
                 ->create([
                     'judul' => 'Saluran air tersumbat setelah hujan',
                     'isi_pengaduan' => 'Saluran air di gang utama tersumbat dan perlu dibersihkan.',
+                    'visibilitas' => Pengaduan::VISIBILITAS_PRIVAT,
                 ]);
         }
 

@@ -31,6 +31,7 @@ class RegistrationTest extends TestCase
         $response->assertSessionHasNoErrors()
             ->assertRedirect(route('dashboard', absolute: false));
 
+        $this->assertTrue($user?->hasRole('Masyarakat'));
         $this->assertAuthenticated();
     }
 }

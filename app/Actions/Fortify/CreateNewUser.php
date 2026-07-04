@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Laravel\Fortify\Contracts\CreatesNewUsers;
+use Spatie\Permission\Models\Role;
 
 class CreateNewUser implements CreatesNewUsers
 {
@@ -37,6 +38,9 @@ class CreateNewUser implements CreatesNewUsers
                 'email' => $input['email'],
                 'password' => $input['password'],
             ]);
+
+            $masyarakatRole = Role::findOrCreate('Masyarakat', 'web');
+            $user->assignRole($masyarakatRole);
 
             $this->createTeam->handle($user, $user->name."'s Team", isPersonal: true);
 
