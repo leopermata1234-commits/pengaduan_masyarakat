@@ -3,7 +3,7 @@
 use App\Models\Pengaduan;
 use App\Models\TanggapanPengaduan;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -15,6 +15,11 @@ new #[Title('Detail Pengaduan')] class extends Component
     public string $status = '';
 
     public string $isi_tanggapan = '';
+
+    public function fotoUrl(string $foto): string
+    {
+        return '/storage/'.Str::of($foto)->ltrim('/');
+    }
 
     public function mount(Pengaduan $pengaduan): void
     {
@@ -74,7 +79,16 @@ new #[Title('Detail Pengaduan')] class extends Component
                 <p class="mt-4 whitespace-pre-line text-zinc-800 dark:text-zinc-100">{{ $pengaduan->isi_pengaduan }}</p>
             </div>
             @if ($pengaduan->foto)
-                <img src="{{ Storage::disk('public')->url($pengaduan->foto) }}" alt="{{ $pengaduan->judul }}" class="max-h-96 rounded-lg border border-zinc-200 object-cover dark:border-zinc-700">
+                <div class="space-y-3">
+                    <p class="text-sm font-medium text-zinc-700 dark:text-zinc-200">{{ __('Foto Pengaduan') }}</p>
+                    <a href="{{ $this->fotoUrl($pengaduan->foto) }}" target="_blank" class="block">
+                        <img
+                            src="{{ $this->fotoUrl($pengaduan->foto) }}"
+                            alt="{{ $pengaduan->judul }}"
+                            class="max-h-[32rem] w-full rounded-lg border border-zinc-200 object-contain dark:border-zinc-700"
+                        >
+                    </a>
+                </div>
             @endif
         </div>
 

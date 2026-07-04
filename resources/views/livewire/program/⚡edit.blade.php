@@ -3,6 +3,7 @@
 use App\Models\ProgramBanjar;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -19,6 +20,11 @@ new #[Title('Edit Informasi Kegiatan')] class extends Component
     public string $tanggal = '';
     public string $status = '';
     public ?TemporaryUploadedFile $gambar = null;
+
+    public function gambarUrl(string $gambar): string
+    {
+        return '/storage/'.Str::of($gambar)->ltrim('/');
+    }
 
     public function mount(ProgramBanjar $programBanjar): void
     {
@@ -65,6 +71,29 @@ new #[Title('Edit Informasi Kegiatan')] class extends Component
         <flux:input wire:model="tanggal" :label="__('Tanggal')" type="date" required />
         <flux:select wire:model="status" :label="__('Status')">@foreach (ProgramBanjar::STATUSES as $statusOption)<flux:select.option value="{{ $statusOption }}">{{ $statusOption }}</flux:select.option>@endforeach</flux:select>
         <flux:input wire:model="gambar" :label="__('Ganti Gambar')" type="file" accept="image/*" />
+
+        @if ($gambar)
+            <div class="space-y-3">
+                <p class="text-sm font-medium text-zinc-700 dark:text-zinc-200">{{ __('Preview Gambar Baru') }}</p>
+                <img
+                    src="{{ $gambar->temporaryUrl() }}"
+                    alt="{{ __('Preview gambar baru') }}"
+                    class="max-h-80 w-full rounded-lg border border-zinc-200 object-contain dark:border-zinc-700"
+                >
+            </div>
+        @elseif ($programBanjar->gambar)
+            <div class="space-y-3">
+                <p class="text-sm font-medium text-zinc-700 dark:text-zinc-200">{{ __('Gambar Saat Ini') }}</p>
+                <a href="{{ $this->gambarUrl($programBanjar->gambar) }}" target="_blank" class="block">
+                    <img
+                        src="{{ $this->gambarUrl($programBanjar->gambar) }}"
+                        alt="{{ $programBanjar->judul }}"
+                        class="max-h-80 w-full rounded-lg border border-zinc-200 object-contain dark:border-zinc-700"
+                    >
+                </a>
+            </div>
+        @endif
+
         <div class="flex justify-end gap-2"><flux:button variant="filled" :href="route('program.index')" wire:navigate>{{ __('Batal') }}</flux:button><flux:button type="submit" variant="primary">{{ __('Simpan') }}</flux:button></div>
     </form>
 </section>

@@ -4,6 +4,7 @@ use App\Models\ProgramBanjar;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
@@ -28,6 +29,11 @@ new #[Title('Informasi Kegiatan')] class extends Component
     public function updatedStatus(): void
     {
         $this->resetPage();
+    }
+
+    public function gambarUrl(string $gambar): string
+    {
+        return '/storage/'.Str::of($gambar)->ltrim('/');
     }
 
     #[Computed]
@@ -91,12 +97,25 @@ new #[Title('Informasi Kegiatan')] class extends Component
         <div class="overflow-x-auto">
             <table class="w-full text-left text-sm">
                 <thead class="border-b border-zinc-200 text-xs uppercase text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
-                    <tr><th class="px-4 py-3">{{ __('Judul') }}</th><th class="px-4 py-3">{{ __('Tanggal') }}</th><th class="px-4 py-3">{{ __('Status') }}</th><th class="px-4 py-3">{{ __('Pembuat') }}</th><th class="w-32 px-4 py-3 text-right">{{ __('Aksi') }}</th></tr>
+                    <tr><th class="px-4 py-3">{{ __('Judul') }}</th><th class="px-4 py-3">{{ __('Foto') }}</th><th class="px-4 py-3">{{ __('Tanggal') }}</th><th class="px-4 py-3">{{ __('Status') }}</th><th class="px-4 py-3">{{ __('Pembuat') }}</th><th class="w-32 px-4 py-3 text-right">{{ __('Aksi') }}</th></tr>
                 </thead>
                 <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
                     @forelse ($this->program as $item)
                         <tr>
                             <td class="px-4 py-3 font-medium text-zinc-950 dark:text-white">{{ $item->judul }}</td>
+                            <td class="px-4 py-3">
+                                @if ($item->gambar)
+                                    <a href="{{ $this->gambarUrl($item->gambar) }}" target="_blank" class="block w-fit">
+                                        <img
+                                            src="{{ $this->gambarUrl($item->gambar) }}"
+                                            alt="{{ $item->judul }}"
+                                            class="h-14 w-24 rounded-md border border-zinc-200 object-cover dark:border-zinc-700"
+                                        >
+                                    </a>
+                                @else
+                                    <span class="text-zinc-500 dark:text-zinc-400">{{ __('Tidak ada foto') }}</span>
+                                @endif
+                            </td>
                             <td class="px-4 py-3 text-zinc-600 dark:text-zinc-300">{{ $item->tanggal->format('d M Y') }}</td>
                             <td class="px-4 py-3 text-zinc-600 dark:text-zinc-300">{{ $item->status }}</td>
                             <td class="px-4 py-3 text-zinc-600 dark:text-zinc-300">{{ $item->user->name }}</td>
@@ -113,7 +132,7 @@ new #[Title('Informasi Kegiatan')] class extends Component
                             </div></td>
                         </tr>
                     @empty
-                        <tr><td colspan="5" class="px-4 py-8 text-center text-zinc-500">{{ __('Data informasi kegiatan tidak ditemukan.') }}</td></tr>
+                        <tr><td colspan="6" class="px-4 py-8 text-center text-zinc-500">{{ __('Data informasi kegiatan tidak ditemukan.') }}</td></tr>
                     @endforelse
                 </tbody>
             </table>
