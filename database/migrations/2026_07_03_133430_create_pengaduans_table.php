@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('judul');
             $table->text('isi_pengaduan');
             $table->string('foto')->nullable();
-            $table->string('status')->default('Pending');
+            $table->string('status')->default('Menunggu');
             $table->timestamps();
 
             $table->index(['status', 'created_at']);

@@ -6,7 +6,10 @@
     <body class="min-h-screen bg-white dark:bg-zinc-800">
         <flux:sidebar sticky collapsible="mobile" class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
             <flux:sidebar.header>
-                <x-app-logo :sidebar="true" href="{{ route('dashboard') }}" wire:navigate />
+                <div class="flex w-full items-center gap-2">
+                    <x-app-logo :sidebar="true" href="{{ route('dashboard') }}" wire:navigate class="min-w-0 flex-1" />
+                    <livewire:notifications.pengaduan-bell position="bottom" />
+                </div>
                 <flux:sidebar.collapse class="lg:hidden" />
             </flux:sidebar.header>
 
@@ -14,7 +17,7 @@
                 <flux:sidebar.group :heading="__('Layanan')" class="grid">
                     @can('dashboard.view')
                         <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
-                            {{ __('Dashboard') }}
+                            {{ auth()->user()->hasRole('Masyarakat') ? __('Beranda') : __('Dashboard') }}
                         </flux:sidebar.item>
                     @endcan
 
@@ -70,6 +73,8 @@
             <flux:sidebar.toggle class="lg:hidden" icon="bars-2" inset="left" />
 
             <flux:spacer />
+
+            <livewire:notifications.pengaduan-bell />
 
             <flux:dropdown position="top" align="end">
                 <flux:profile

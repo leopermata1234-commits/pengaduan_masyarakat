@@ -77,6 +77,8 @@ Pengaduan
 - pengaduan.delete
 - pengaduan.respond
 - pengaduan.verify
+- pengaduan.lonceng
+- pengaduan.ingatkan
 
 Informasi Kegiatan
 
@@ -428,7 +430,7 @@ Dashboard menampilkan statistik:
 
 - Total User
 - Total Pengaduan
-- Pengaduan Pending
+- Pengaduan Menunggu
 - Pengaduan Diproses
 - Pengaduan Selesai
 - Total Informasi Kegiatan

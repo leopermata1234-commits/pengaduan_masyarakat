@@ -28,6 +28,8 @@ class RolePermissionSeeder extends Seeder
             'pengaduan.delete',
             'pengaduan.respond',
             'pengaduan.verify',
+            'pengaduan.lonceng',
+            'pengaduan.ingatkan',
             'program.view',
             'program.create',
             'program.edit',
@@ -96,6 +98,7 @@ class RolePermissionSeeder extends Seeder
             'dashboard.view',
             'pengaduan.view',
             'pengaduan.create',
+            'pengaduan.ingatkan',
             'program.view',
             'dokumentasi.view',
         ]);

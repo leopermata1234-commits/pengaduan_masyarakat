@@ -16,6 +16,8 @@ new #[Title('Detail Pengaduan')] class extends Component
 
     public string $isi_tanggapan = '';
 
+    public string $alasan_penolakan = '';
+
     public function fotoUrl(string $foto): string
     {
         return '/storage/'.Str::of($foto)->ltrim('/');
@@ -35,9 +37,26 @@ new #[Title('Detail Pengaduan')] class extends Component
 
         $validated = $this->validate([
             'status' => ['required', Rule::in(Pengaduan::STATUSES)],
+            'alasan_penolakan' => [
+                Rule::requiredIf($this->status === Pengaduan::STATUS_DITOLAK && $this->pengaduan->status !== Pengaduan::STATUS_DITOLAK),
+                'nullable',
+                'string',
+            ],
         ]);
 
         $this->pengaduan->update(['status' => $validated['status']]);
+
+        if ($validated['status'] === Pengaduan::STATUS_DITOLAK && $this->pengaduan->wasChanged('status')) {
+            TanggapanPengaduan::create([
+                'pengaduan_id' => $this->pengaduan->id,
+                'admin_id' => auth()->id(),
+                'isi_tanggapan' => __('Pengaduan ditolak. Alasan: :alasan', [
+                    'alasan' => $validated['alasan_penolakan'],
+                ]),
+            ]);
+        }
+
+        $this->alasan_penolakan = '';
         $this->pengaduan->refresh()->load(['user', 'tanggapan.admin']);
     }
 
@@ -100,11 +119,16 @@ new #[Title('Detail Pengaduan')] class extends Component
                 <p class="mt-1 text-lg font-semibold text-zinc-950 dark:text-white">{{ $pengaduan->visibilitas }}</p>
                 @can('pengaduan.verify')
                     <form wire:submit="saveStatus" class="mt-4 space-y-3">
-                        <flux:select wire:model="status" :label="__('Ubah Status')">
+                        <flux:select wire:model.live="status" :label="__('Ubah Status')">
                             @foreach (Pengaduan::STATUSES as $statusOption)
                                 <flux:select.option value="{{ $statusOption }}">{{ $statusOption }}</flux:select.option>
                             @endforeach
                         </flux:select>
+
+                        @if ($status === Pengaduan::STATUS_DITOLAK && $pengaduan->status !== Pengaduan::STATUS_DITOLAK)
+                            <flux:textarea wire:model="alasan_penolakan" :label="__('Alasan Penolakan')" rows="4" required />
+                        @endif
+
                         <flux:button type="submit" variant="primary" class="w-full">{{ __('Simpan Status') }}</flux:button>
                     </form>
                 @endcan

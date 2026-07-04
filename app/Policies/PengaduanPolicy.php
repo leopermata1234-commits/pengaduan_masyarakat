@@ -30,7 +30,12 @@ class PengaduanPolicy
 
     public function update(User $user, Pengaduan $pengaduan): bool
     {
-        return $user->can('pengaduan.edit');
+        if (! $user->can('pengaduan.edit')) {
+            return false;
+        }
+
+        return ! $user->hasRole('Masyarakat')
+            || $pengaduan->user_id === $user->id;
     }
 
     public function delete(User $user, Pengaduan $pengaduan): bool

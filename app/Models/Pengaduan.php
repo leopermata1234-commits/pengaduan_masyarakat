@@ -11,7 +11,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Pengaduan extends Model
 {
-    public const STATUS_PENDING = 'Pending';
+    public const STATUS_MENUNGGU = 'Menunggu';
+
+    public const STATUS_PENDING = self::STATUS_MENUNGGU;
 
     public const STATUS_DIPROSES = 'Diproses';
 
@@ -24,7 +26,7 @@ class Pengaduan extends Model
     public const VISIBILITAS_PRIVAT = 'Privat';
 
     public const STATUSES = [
-        self::STATUS_PENDING,
+        self::STATUS_MENUNGGU,
         self::STATUS_DIPROSES,
         self::STATUS_DITOLAK,
         self::STATUS_SELESAI,

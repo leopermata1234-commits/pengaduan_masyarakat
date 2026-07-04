@@ -70,4 +70,27 @@ class PengaduanVisibilityTest extends TestCase
         $this->assertContains($publicPengaduan->id, $visibleIds);
         $this->assertNotContains($otherPrivatePengaduan->id, $visibleIds);
     }
+
+    public function test_masyarakat_can_update_only_their_own_pengaduan(): void
+    {
+        $owner = User::factory()->create();
+        $viewer = User::factory()->create();
+
+        $owner->assignRole('Masyarakat');
+        $viewer->assignRole('Masyarakat');
+
+        $owner->givePermissionTo('pengaduan.edit');
+        $viewer->givePermissionTo('pengaduan.edit');
+
+        $ownedPengaduan = Pengaduan::factory()
+            ->for($viewer)
+            ->create();
+
+        $otherPengaduan = Pengaduan::factory()
+            ->for($owner)
+            ->create(['visibilitas' => Pengaduan::VISIBILITAS_PUBLIK]);
+
+        $this->assertTrue($viewer->can('update', $ownedPengaduan));
+        $this->assertFalse($viewer->can('update', $otherPengaduan));
+    }
 }

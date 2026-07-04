@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Pengaduan;
+use Flux\Flux;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
@@ -58,6 +59,20 @@ new #[Title('Pengaduan')] class extends Component
         $pengaduan->delete();
         $this->resetPage();
     }
+
+    public function remind(int $pengaduanId): void
+    {
+        $pengaduan = Pengaduan::findOrFail($pengaduanId);
+
+        abort_unless(auth()->user()->can('pengaduan.ingatkan'), 403);
+        abort_unless($pengaduan->user_id === auth()->id(), 403);
+        abort_unless($pengaduan->status === Pengaduan::STATUS_MENUNGGU, 403);
+
+        Flux::toast(
+            variant: 'success',
+            text: __('Pengingat pengaduan berhasil dikirim.')
+        );
+    }
 };
 ?>
 
@@ -93,35 +108,45 @@ new #[Title('Pengaduan')] class extends Component
                 <thead class="border-b border-zinc-200 text-xs uppercase text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
                     <tr>
                         <th class="px-4 py-3">{{ __('Judul') }}</th>
-                        <th class="px-4 py-3">{{ __('Pelapor') }}</th>
-                        <th class="px-4 py-3">{{ __('Status') }}</th>
-                        <th class="px-4 py-3">{{ __('Visibilitas') }}</th>
                         <th class="px-4 py-3">{{ __('Tanggal') }}</th>
-                        <th class="w-40 px-4 py-3 text-right">{{ __('Aksi') }}</th>
+                        <th class="px-4 py-3">{{ __('Status') }}</th>
+                        <th class="px-4 py-3">{{ __('Sifat') }}</th>
+                        <th class="w-72 px-4 py-3 text-center">{{ __('Aksi') }}</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
                     @forelse ($this->pengaduan as $item)
                         <tr>
                             <td class="px-4 py-3 font-medium text-zinc-950 dark:text-white">{{ $item->judul }}</td>
-                            <td class="px-4 py-3 text-zinc-600 dark:text-zinc-300">{{ $item->user->name }}</td>
+                            <td class="px-4 py-3 text-zinc-600 dark:text-zinc-300">{{ $item->created_at->format('d M Y') }}</td>
                             <td class="px-4 py-3 text-zinc-600 dark:text-zinc-300">{{ $item->status }}</td>
                             <td class="px-4 py-3 text-zinc-600 dark:text-zinc-300">{{ $item->visibilitas }}</td>
-                            <td class="px-4 py-3 text-zinc-600 dark:text-zinc-300">{{ $item->created_at->format('d M Y') }}</td>
                             <td class="px-4 py-3">
-                                <div class="flex justify-end gap-1">
-                                    <flux:button size="sm" variant="ghost" icon="eye" :href="route('pengaduan.show', $item)" wire:navigate />
-                                    @can('pengaduan.edit')
-                                        <flux:button size="sm" variant="ghost" icon="pencil" :href="route('pengaduan.edit', $item)" wire:navigate />
-                                    @endcan
-                                    @can('pengaduan.delete')
-                                        <flux:button size="sm" variant="ghost" icon="trash" wire:click="delete({{ $item->id }})" wire:confirm="{{ __('Hapus pengaduan ini?') }}" />
-                                    @endcan
+                                <div class="grid grid-cols-[4rem_1fr_4rem] items-center gap-2 whitespace-nowrap">
+                                    <div></div>
+
+                                    <div class="flex items-center justify-center gap-1.5">
+                                        <flux:button size="sm" variant="ghost" class="min-w-20 justify-center" :href="route('pengaduan.show', $item)" wire:navigate>{{ __('Detail') }}</flux:button>
+                                        @can('pengaduan.ingatkan')
+                                            @if ($item->user_id === auth()->id() && $item->status === Pengaduan::STATUS_MENUNGGU)
+                                                <flux:button size="sm" variant="ghost" class="min-w-20 justify-center" wire:click="remind({{ $item->id }})">{{ __('Ingatkan') }}</flux:button>
+                                            @endif
+                                        @endcan
+                                    </div>
+
+                                    <div class="flex justify-end">
+                                        @can('update', $item)
+                                            <flux:button size="sm" variant="ghost" icon="pencil" :href="route('pengaduan.edit', $item)" wire:navigate />
+                                        @endcan
+                                        @can('pengaduan.delete')
+                                            <flux:button size="sm" variant="ghost" icon="trash" wire:click="delete({{ $item->id }})" wire:confirm="{{ __('Hapus pengaduan ini?') }}" />
+                                        @endcan
+                                    </div>
                                 </div>
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="6" class="px-4 py-8 text-center text-zinc-500">{{ __('Data pengaduan tidak ditemukan.') }}</td></tr>
+                        <tr><td colspan="5" class="px-4 py-8 text-center text-zinc-500">{{ __('Data pengaduan tidak ditemukan.') }}</td></tr>
                     @endforelse
                 </tbody>
             </table>

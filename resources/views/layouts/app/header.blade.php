@@ -11,7 +11,7 @@
 
             <flux:navbar class="-mb-px max-lg:hidden">
                 <flux:navbar.item icon="layout-grid" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
-                    {{ __('Dashboard') }}
+                    {{ auth()->user()->hasRole('Masyarakat') ? __('Beranda') : __('Dashboard') }}
                 </flux:navbar.item>
             </flux:navbar>
 
@@ -60,7 +60,7 @@
             <flux:sidebar.nav>
                 <flux:sidebar.group :heading="__('Platform')">
                     <flux:sidebar.item icon="layout-grid" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
-                        {{ __('Dashboard')  }}
+                        {{ auth()->user()->hasRole('Masyarakat') ? __('Beranda') : __('Dashboard') }}
                     </flux:sidebar.item>
                 </flux:sidebar.group>
             </flux:sidebar.nav>
