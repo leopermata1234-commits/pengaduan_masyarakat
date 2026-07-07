@@ -29,7 +29,7 @@
 
                     @can('program.view')
                         <flux:sidebar.item icon="calendar-days" :href="route('program.index')" :current="request()->routeIs('program.*')" wire:navigate>
-                            {{ __('Informasi Kegiatan') }}
+                            {{ __('Program') }}
                         </flux:sidebar.item>
                     @endcan
 

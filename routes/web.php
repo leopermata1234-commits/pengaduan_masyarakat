@@ -52,13 +52,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('permission:pengaduan.edit')
         ->name('pengaduan.edit');
 
-    Route::livewire('informasi-kegiatan', 'program.index')
+    Route::redirect('informasi-kegiatan', 'program');
+    Route::redirect('informasi-kegiatan/create', 'program/create');
+    Route::redirect('informasi-kegiatan/{programBanjar}/edit', 'program/{programBanjar}/edit');
+
+    Route::livewire('program', 'program.index')
         ->middleware('permission:program.view')
         ->name('program.index');
-    Route::livewire('informasi-kegiatan/create', 'program.create')
+    Route::livewire('program/create', 'program.create')
         ->middleware('permission:program.create')
         ->name('program.create');
-    Route::livewire('informasi-kegiatan/{programBanjar}/edit', 'program.edit')
+    Route::livewire('program/{programBanjar}/edit', 'program.edit')
         ->middleware('permission:program.edit')
         ->name('program.edit');
 

@@ -25,7 +25,6 @@ class DokumentasiKegiatan extends Model
 
     protected $fillable = [
         'user_id',
-        'program_banjar_id',
         'judul',
         'deskripsi',
         'tanggal',
@@ -40,14 +39,6 @@ class DokumentasiKegiatan extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
-    }
-
-    /**
-     * @return BelongsTo<ProgramBanjar, $this>
-     */
-    public function programBanjar(): BelongsTo
-    {
-        return $this->belongsTo(ProgramBanjar::class);
     }
 
     /**

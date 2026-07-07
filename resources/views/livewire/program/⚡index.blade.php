@@ -11,7 +11,7 @@ use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-new #[Title('Informasi Kegiatan')] class extends Component
+new #[Title('Program')] class extends Component
 {
     use WithPagination;
 
@@ -74,19 +74,19 @@ new #[Title('Informasi Kegiatan')] class extends Component
 <section class="mx-auto flex w-full max-w-7xl flex-col gap-6">
     <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div class="flex flex-col gap-2">
-            <div class="flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400"><span>{{ __('Layanan') }}</span><span>/</span><span class="font-medium text-zinc-800 dark:text-zinc-100">{{ __('Informasi Kegiatan') }}</span></div>
+            <div class="flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400"><span>{{ __('Layanan') }}</span><span>/</span><span class="font-medium text-zinc-800 dark:text-zinc-100">{{ __('Program') }}</span></div>
             <div>
-                <h1 class="text-2xl font-semibold text-zinc-950 dark:text-white">{{ __('Informasi Kegiatan') }}</h1>
-                <p class="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{{ __('Kelola informasi kegiatan Banjar Puluk-Puluk.') }}</p>
+                <h1 class="text-2xl font-semibold text-zinc-950 dark:text-white">{{ __('Program') }}</h1>
+                <p class="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{{ __('Galeri foto program Banjar Puluk-Puluk.') }}</p>
             </div>
         </div>
         @can('program.create')
-            <flux:button icon="plus" variant="primary" :href="route('program.create')" wire:navigate>{{ __('Tambah Informasi') }}</flux:button>
+            <flux:button icon="plus" variant="primary" :href="route('program.create')" wire:navigate>{{ __('Tambah Program') }}</flux:button>
         @endcan
     </div>
     <div class="rounded-lg border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900">
         <div class="grid gap-3 border-b border-zinc-200 p-4 dark:border-zinc-700 md:grid-cols-[1fr_220px]">
-            <flux:input wire:model.live.debounce.400ms="search" icon="magnifying-glass" :placeholder="__('Cari informasi kegiatan')" />
+            <flux:input wire:model.live.debounce.400ms="search" icon="magnifying-glass" :placeholder="__('Cari program')" />
             <flux:select wire:model.live="status">
                 <flux:select.option value="">{{ __('Semua Status') }}</flux:select.option>
                 @foreach (ProgramBanjar::STATUSES as $statusOption)
@@ -94,48 +94,67 @@ new #[Title('Informasi Kegiatan')] class extends Component
                 @endforeach
             </flux:select>
         </div>
-        <div class="overflow-x-auto">
-            <table class="w-full text-left text-sm">
-                <thead class="border-b border-zinc-200 text-xs uppercase text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
-                    <tr><th class="px-4 py-3">{{ __('Judul') }}</th><th class="px-4 py-3">{{ __('Foto') }}</th><th class="px-4 py-3">{{ __('Tanggal') }}</th><th class="px-4 py-3">{{ __('Status') }}</th><th class="px-4 py-3">{{ __('Pembuat') }}</th><th class="w-32 px-4 py-3 text-right">{{ __('Aksi') }}</th></tr>
-                </thead>
-                <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
-                    @forelse ($this->program as $item)
-                        <tr>
-                            <td class="px-4 py-3 font-medium text-zinc-950 dark:text-white">{{ $item->judul }}</td>
-                            <td class="px-4 py-3">
+        <div class="p-4">
+            @if ($this->program->isNotEmpty())
+                <div class="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+                    @foreach ($this->program as $item)
+                        <article class="overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-zinc-700 dark:bg-zinc-900">
+                            <div class="relative">
                                 @if ($item->gambar)
-                                    <a href="{{ $this->gambarUrl($item->gambar) }}" target="_blank" class="block w-fit">
+                                    <a href="{{ $this->gambarUrl($item->gambar) }}" target="_blank" class="block">
                                         <img
                                             src="{{ $this->gambarUrl($item->gambar) }}"
                                             alt="{{ $item->judul }}"
-                                            class="h-14 w-24 rounded-md border border-zinc-200 object-cover dark:border-zinc-700"
+                                            class="aspect-[16/9] w-full object-cover"
                                         >
                                     </a>
                                 @else
-                                    <span class="text-zinc-500 dark:text-zinc-400">{{ __('Tidak ada foto') }}</span>
+                                    <div class="flex aspect-[16/9] w-full items-center justify-center bg-zinc-100 text-sm text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
+                                        {{ __('Belum ada foto program') }}
+                                    </div>
                                 @endif
-                            </td>
-                            <td class="px-4 py-3 text-zinc-600 dark:text-zinc-300">{{ $item->tanggal->format('d M Y') }}</td>
-                            <td class="px-4 py-3 text-zinc-600 dark:text-zinc-300">{{ $item->status }}</td>
-                            <td class="px-4 py-3 text-zinc-600 dark:text-zinc-300">{{ $item->user->name }}</td>
-                            <td class="px-4 py-3"><div class="flex justify-end gap-1">
-                                @can('program.edit')<flux:button size="sm" variant="ghost" icon="pencil" :href="route('program.edit', $item)" wire:navigate />@endcan
-                                @can('program.edit')
-                                    @if ($item->status !== ProgramBanjar::STATUS_PUBLISHED)
-                                        <flux:button size="sm" variant="ghost" icon="check" wire:click="setStatus({{ $item->id }}, '{{ ProgramBanjar::STATUS_PUBLISHED }}')" />
-                                    @else
-                                        <flux:button size="sm" variant="ghost" icon="arrow-path" wire:click="setStatus({{ $item->id }}, '{{ ProgramBanjar::STATUS_DRAFT }}')" />
-                                    @endif
-                                @endcan
-                                @can('program.delete')<flux:button size="sm" variant="ghost" icon="trash" wire:click="delete({{ $item->id }})" wire:confirm="{{ __('Hapus informasi kegiatan ini?') }}" />@endcan
-                            </div></td>
-                        </tr>
-                    @empty
-                        <tr><td colspan="6" class="px-4 py-8 text-center text-zinc-500">{{ __('Data informasi kegiatan tidak ditemukan.') }}</td></tr>
-                    @endforelse
-                </tbody>
-            </table>
+
+                                <div class="absolute left-3 top-3 rounded-md bg-zinc-950/65 px-2.5 py-1 text-xs font-medium text-white backdrop-blur">
+                                    {{ $item->tanggal->format('d M Y') }}
+                                </div>
+
+                                <div class="absolute bottom-3 right-3 rounded-md bg-zinc-950/70 px-2.5 py-1 text-xs font-medium text-white backdrop-blur">
+                                    {{ $item->status }}
+                                </div>
+                            </div>
+
+                            <div class="space-y-3 p-4">
+                                <div class="flex items-start justify-between gap-3">
+                                    <h2 class="line-clamp-2 min-h-12 text-base font-semibold leading-6 text-zinc-950 dark:text-white">{{ $item->judul }}</h2>
+
+                                    @canany(['program.edit', 'program.delete'])
+                                        <div class="flex shrink-0 gap-1">
+                                            @can('program.edit')<flux:button size="sm" variant="ghost" icon="pencil" :href="route('program.edit', $item)" wire:navigate />@endcan
+                                            @can('program.delete')<flux:button size="sm" variant="ghost" icon="trash" wire:click="delete({{ $item->id }})" wire:confirm="{{ __('Hapus program ini?') }}" />@endcan
+                                        </div>
+                                    @endcanany
+                                </div>
+
+                                <p class="line-clamp-3 min-h-16 text-sm leading-5 text-zinc-600 dark:text-zinc-300">{{ $item->deskripsi }}</p>
+
+                                <div class="flex items-center justify-between gap-3 border-t border-zinc-200 pt-3 text-xs text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
+                                    <span class="truncate">{{ $item->user->name }}</span>
+
+                                    @can('program.edit')
+                                        @if ($item->status !== ProgramBanjar::STATUS_PUBLISHED)
+                                            <flux:button size="sm" variant="ghost" icon="check" wire:click="setStatus({{ $item->id }}, '{{ ProgramBanjar::STATUS_PUBLISHED }}')" />
+                                        @else
+                                            <flux:button size="sm" variant="ghost" icon="arrow-path" wire:click="setStatus({{ $item->id }}, '{{ ProgramBanjar::STATUS_DRAFT }}')" />
+                                        @endif
+                                    @endcan
+                                </div>
+                            </div>
+                        </article>
+                    @endforeach
+                </div>
+            @else
+                <div class="py-10 text-center text-sm text-zinc-500 dark:text-zinc-400">{{ __('Data program tidak ditemukan.') }}</div>
+            @endif
         </div>
         <div class="border-t border-zinc-200 p-4 dark:border-zinc-700">{{ $this->program->links() }}</div>
     </div>

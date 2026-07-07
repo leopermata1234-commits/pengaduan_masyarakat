@@ -68,7 +68,7 @@ new #[Title('Dashboard')] class extends Component
             <div class="rounded-lg border border-zinc-200 bg-white p-8 dark:border-zinc-700 dark:bg-zinc-900">
                 <h1 class="text-3xl font-semibold text-zinc-950 dark:text-white">{{ __('Selamat Datang di Banjar Puluk-Puluk') }}</h1>
                 <p class="mt-3 max-w-3xl text-sm leading-6 text-zinc-600 dark:text-zinc-300">
-                    {{ __('Sistem ini disediakan untuk membantu masyarakat memperoleh informasi kegiatan, melihat dokumentasi, serta menyampaikan pengaduan secara lebih mudah dan tertata.') }}
+                    {{ __('Sistem ini disediakan untuk membantu masyarakat melihat program Banjar Puluk-Puluk, melihat dokumentasi, serta menyampaikan pengaduan secara lebih mudah dan tertata.') }}
                 </p>
             </div>
         </div>
@@ -80,7 +80,7 @@ new #[Title('Dashboard')] class extends Component
                     {{ __('Banjar Puluk-Puluk merupakan lingkungan masyarakat adat yang menjunjung kebersamaan, gotong royong, dan pelayanan kepada krama banjar. Kehidupan banjar dijalankan melalui koordinasi antara prajuru banjar, Bendesa Adat, dan masyarakat dalam menjaga ketertiban serta keharmonisan lingkungan.') }}
                 </p>
                 <p>
-                    {{ __('Melalui sistem informasi ini, masyarakat dapat mengikuti informasi kegiatan banjar, melihat dokumentasi kegiatan, dan menyampaikan pengaduan yang berkaitan dengan kebutuhan lingkungan sekitar. Setiap laporan diharapkan membantu pengurus banjar merespons persoalan masyarakat dengan lebih cepat dan transparan.') }}
+                    {{ __('Melalui sistem informasi ini, masyarakat dapat mengikuti program banjar, melihat dokumentasi kegiatan, dan menyampaikan pengaduan yang berkaitan dengan kebutuhan lingkungan sekitar. Setiap laporan diharapkan membantu pengurus banjar merespons persoalan masyarakat dengan lebih cepat dan transparan.') }}
                 </p>
             </div>
         </div>
@@ -120,7 +120,7 @@ new #[Title('Dashboard')] class extends Component
                 <p class="mt-2 text-3xl font-semibold text-emerald-600 dark:text-emerald-400">{{ number_format($this->stats['selesai']) }}</p>
             </div>
             <div class="rounded-lg border border-zinc-200 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-900">
-                <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('Total Informasi Kegiatan') }}</p>
+                <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('Total Program') }}</p>
                 <p class="mt-2 text-3xl font-semibold text-zinc-950 dark:text-white">{{ number_format($this->stats['program']) }}</p>
             </div>
             <div class="rounded-lg border border-zinc-200 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-900">

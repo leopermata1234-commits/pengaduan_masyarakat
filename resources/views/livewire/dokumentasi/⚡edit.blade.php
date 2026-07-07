@@ -1,8 +1,6 @@
 <?php
 
 use App\Models\DokumentasiKegiatan;
-use App\Models\ProgramBanjar;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
@@ -17,8 +15,10 @@ new #[Title('Edit Dokumentasi')] class extends Component
 
     public DokumentasiKegiatan $dokumentasiKegiatan;
 
-    public string $program_banjar_id = '';
-
+    public string $judul = '';
+    public string $deskripsi = '';
+    public string $tanggal = '';
+    public string $status = '';
     public array $fotos = [];
 
     public array $existingFotos = [];
@@ -28,33 +28,23 @@ new #[Title('Edit Dokumentasi')] class extends Component
         Gate::authorize('update', $dokumentasiKegiatan);
 
         $this->dokumentasiKegiatan = $dokumentasiKegiatan;
-        $this->program_banjar_id = (string) $dokumentasiKegiatan->program_banjar_id;
+        $this->judul = $dokumentasiKegiatan->judul;
+        $this->deskripsi = $dokumentasiKegiatan->deskripsi;
+        $this->tanggal = $dokumentasiKegiatan->tanggal->format('Y-m-d');
+        $this->status = $dokumentasiKegiatan->status;
         $this->existingFotos = $dokumentasiKegiatan->fotos ?? ($dokumentasiKegiatan->foto ? [$dokumentasiKegiatan->foto] : []);
     }
 
+    /**
+     * @return array<int, string>
+     */
     #[Computed]
-    public function informasiKegiatan()
+    public function statusOptions(): array
     {
-        return ProgramBanjar::query()
-            ->where(fn (Builder $query) => $query
-                ->where('status', ProgramBanjar::STATUS_PUBLISHED)
-                ->orWhere('id', $this->dokumentasiKegiatan->program_banjar_id))
-            ->orderByDesc('tanggal')
-            ->get();
-    }
-
-    #[Computed]
-    public function selectedInformasi(): ?ProgramBanjar
-    {
-        if ($this->program_banjar_id === '') {
-            return null;
-        }
-
-        return ProgramBanjar::query()
-            ->where(fn (Builder $query) => $query
-                ->where('status', ProgramBanjar::STATUS_PUBLISHED)
-                ->orWhere('id', $this->dokumentasiKegiatan->program_banjar_id))
-            ->find($this->program_banjar_id);
+        return [
+            DokumentasiKegiatan::STATUS_DRAFT,
+            DokumentasiKegiatan::STATUS_PUBLISHED,
+        ];
     }
 
     public function removeExistingFoto(int $index): void
@@ -73,17 +63,13 @@ new #[Title('Edit Dokumentasi')] class extends Component
         Gate::authorize('update', $this->dokumentasiKegiatan);
 
         $validated = $this->validate([
-            'program_banjar_id' => [
-                'required',
-                Rule::exists('program_banjar', 'id')->where(fn ($query) => $query
-                    ->where('status', ProgramBanjar::STATUS_PUBLISHED)
-                    ->orWhere('id', $this->dokumentasiKegiatan->program_banjar_id)),
-            ],
+            'judul' => ['required', 'string', 'max:255'],
+            'deskripsi' => ['required', 'string'],
+            'tanggal' => ['required', 'date'],
+            'status' => ['required', Rule::in($this->statusOptions)],
             'fotos' => ['nullable', 'array'],
             'fotos.*' => ['image', 'max:2048'],
         ]);
-
-        $informasi = ProgramBanjar::findOrFail($validated['program_banjar_id']);
 
         $newFotos = collect($this->fotos)
             ->map(fn ($foto) => $foto->store('dokumentasi', 'public'))
@@ -93,16 +79,13 @@ new #[Title('Edit Dokumentasi')] class extends Component
         $storedFotos = array_values([...$this->existingFotos, ...$newFotos]);
 
         $this->dokumentasiKegiatan->update([
-            'program_banjar_id' => $informasi->id,
-            'judul' => $informasi->judul,
-            'deskripsi' => $informasi->deskripsi,
-            'tanggal' => $informasi->tanggal,
-            'status' => DokumentasiKegiatan::STATUS_PUBLISHED,
+            'judul' => $validated['judul'],
+            'deskripsi' => $validated['deskripsi'],
+            'tanggal' => $validated['tanggal'],
+            'status' => $validated['status'],
             'foto' => $storedFotos[0] ?? null,
             'fotos' => $storedFotos,
         ]);
-
-        $informasi->update(['status' => ProgramBanjar::STATUS_SELESAI]);
 
         $this->redirectRoute('dokumentasi.index', navigate: true);
     }
@@ -120,20 +103,10 @@ new #[Title('Edit Dokumentasi')] class extends Component
     </div>
 
     <form wire:submit="save" class="space-y-5 rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900">
-        <flux:select wire:model.live="program_banjar_id" :label="__('Informasi Kegiatan Published')">
-            <flux:select.option value="">{{ __('Pilih informasi kegiatan') }}</flux:select.option>
-            @foreach ($this->informasiKegiatan as $informasi)
-                <flux:select.option value="{{ $informasi->id }}">{{ $informasi->judul }} - {{ $informasi->tanggal->format('d M Y') }}</flux:select.option>
-            @endforeach
-        </flux:select>
-
-        @if ($this->selectedInformasi)
-            <div class="rounded-lg border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-800">
-                <p class="font-semibold text-zinc-950 dark:text-white">{{ $this->selectedInformasi->judul }}</p>
-                <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">{{ $this->selectedInformasi->tanggal->format('d M Y') }}</p>
-                <p class="mt-3 whitespace-pre-line text-sm text-zinc-700 dark:text-zinc-200">{{ $this->selectedInformasi->deskripsi }}</p>
-            </div>
-        @endif
+        <flux:input wire:model="judul" :label="__('Judul')" required />
+        <flux:textarea wire:model="deskripsi" :label="__('Deskripsi')" rows="6" required />
+        <flux:input wire:model="tanggal" :label="__('Tanggal')" type="date" required />
+        <flux:select wire:model="status" :label="__('Status')">@foreach ($this->statusOptions as $statusOption)<flux:select.option value="{{ $statusOption }}">{{ $statusOption }}</flux:select.option>@endforeach</flux:select>
 
         @if ($existingFotos)
             <div class="grid gap-3 sm:grid-cols-3">
@@ -146,7 +119,7 @@ new #[Title('Edit Dokumentasi')] class extends Component
             </div>
         @endif
 
-        <flux:input wire:model="fotos" :label="__('Tambah Foto Bukti')" type="file" accept="image/*" multiple />
+        <flux:input wire:model="fotos" :label="__('Tambah Foto Dokumentasi')" type="file" accept="image/*" multiple />
 
         @if ($fotos)
             <div class="grid gap-3 sm:grid-cols-3">

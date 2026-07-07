@@ -10,7 +10,7 @@ use Livewire\Component;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
 
-new #[Title('Edit Informasi Kegiatan')] class extends Component
+new #[Title('Edit Program')] class extends Component
 {
     use WithFileUploads;
 
@@ -64,26 +64,26 @@ new #[Title('Edit Informasi Kegiatan')] class extends Component
 ?>
 
 <section class="mx-auto flex w-full max-w-3xl flex-col gap-6">
-    <div class="flex flex-col gap-2"><div class="flex items-center gap-2 text-sm text-zinc-500"><a href="{{ route('program.index') }}" wire:navigate>{{ __('Informasi Kegiatan') }}</a><span>/</span><span>{{ __('Edit') }}</span></div><h1 class="text-2xl font-semibold text-zinc-950 dark:text-white">{{ __('Edit Informasi Kegiatan') }}</h1></div>
+    <div class="flex flex-col gap-2"><div class="flex items-center gap-2 text-sm text-zinc-500"><a href="{{ route('program.index') }}" wire:navigate>{{ __('Program') }}</a><span>/</span><span>{{ __('Edit') }}</span></div><h1 class="text-2xl font-semibold text-zinc-950 dark:text-white">{{ __('Edit Program') }}</h1></div>
     <form wire:submit="save" class="space-y-5 rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900">
         <flux:input wire:model="judul" :label="__('Judul')" required />
         <flux:textarea wire:model="deskripsi" :label="__('Deskripsi')" rows="6" required />
         <flux:input wire:model="tanggal" :label="__('Tanggal')" type="date" required />
         <flux:select wire:model="status" :label="__('Status')">@foreach (ProgramBanjar::STATUSES as $statusOption)<flux:select.option value="{{ $statusOption }}">{{ $statusOption }}</flux:select.option>@endforeach</flux:select>
-        <flux:input wire:model="gambar" :label="__('Ganti Gambar')" type="file" accept="image/*" />
+        <flux:input wire:model="gambar" :label="__('Ganti Foto Program')" type="file" accept="image/*" />
 
         @if ($gambar)
             <div class="space-y-3">
-                <p class="text-sm font-medium text-zinc-700 dark:text-zinc-200">{{ __('Preview Gambar Baru') }}</p>
+                <p class="text-sm font-medium text-zinc-700 dark:text-zinc-200">{{ __('Preview Foto Baru') }}</p>
                 <img
                     src="{{ $gambar->temporaryUrl() }}"
-                    alt="{{ __('Preview gambar baru') }}"
+                    alt="{{ __('Preview foto baru') }}"
                     class="max-h-80 w-full rounded-lg border border-zinc-200 object-contain dark:border-zinc-700"
                 >
             </div>
         @elseif ($programBanjar->gambar)
             <div class="space-y-3">
-                <p class="text-sm font-medium text-zinc-700 dark:text-zinc-200">{{ __('Gambar Saat Ini') }}</p>
+                <p class="text-sm font-medium text-zinc-700 dark:text-zinc-200">{{ __('Foto Saat Ini') }}</p>
                 <a href="{{ $this->gambarUrl($programBanjar->gambar) }}" target="_blank" class="block">
                     <img
                         src="{{ $this->gambarUrl($programBanjar->gambar) }}"

@@ -1,7 +1,6 @@
 <?php
 
 use App\Models\DokumentasiKegiatan;
-use App\Models\ProgramBanjar;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
@@ -13,29 +12,22 @@ new #[Title('Tambah Dokumentasi')] class extends Component
 {
     use WithFileUploads;
 
-    public string $program_banjar_id = '';
-
+    public string $judul = '';
+    public string $deskripsi = '';
+    public string $tanggal = '';
+    public string $status = DokumentasiKegiatan::STATUS_DRAFT;
     public array $fotos = [];
 
+    /**
+     * @return array<int, string>
+     */
     #[Computed]
-    public function informasiKegiatan()
+    public function statusOptions(): array
     {
-        return ProgramBanjar::query()
-            ->where('status', ProgramBanjar::STATUS_PUBLISHED)
-            ->orderByDesc('tanggal')
-            ->get();
-    }
-
-    #[Computed]
-    public function selectedInformasi(): ?ProgramBanjar
-    {
-        if ($this->program_banjar_id === '') {
-            return null;
-        }
-
-        return ProgramBanjar::query()
-            ->where('status', ProgramBanjar::STATUS_PUBLISHED)
-            ->find($this->program_banjar_id);
+        return [
+            DokumentasiKegiatan::STATUS_DRAFT,
+            DokumentasiKegiatan::STATUS_PUBLISHED,
+        ];
     }
 
     public function save(): void
@@ -43,15 +35,13 @@ new #[Title('Tambah Dokumentasi')] class extends Component
         Gate::authorize('create', DokumentasiKegiatan::class);
 
         $validated = $this->validate([
-            'program_banjar_id' => [
-                'required',
-                Rule::exists('program_banjar', 'id')->where(fn ($query) => $query->where('status', ProgramBanjar::STATUS_PUBLISHED)),
-            ],
+            'judul' => ['required', 'string', 'max:255'],
+            'deskripsi' => ['required', 'string'],
+            'tanggal' => ['required', 'date'],
+            'status' => ['required', Rule::in($this->statusOptions)],
             'fotos' => ['required', 'array', 'min:1'],
             'fotos.*' => ['image', 'max:2048'],
         ]);
-
-        $informasi = ProgramBanjar::findOrFail($validated['program_banjar_id']);
 
         $storedFotos = collect($this->fotos)
             ->map(fn ($foto) => $foto->store('dokumentasi', 'public'))
@@ -60,16 +50,13 @@ new #[Title('Tambah Dokumentasi')] class extends Component
 
         DokumentasiKegiatan::create([
             'user_id' => auth()->id(),
-            'program_banjar_id' => $informasi->id,
-            'judul' => $informasi->judul,
-            'deskripsi' => $informasi->deskripsi,
-            'tanggal' => $informasi->tanggal,
-            'status' => DokumentasiKegiatan::STATUS_PUBLISHED,
+            'judul' => $validated['judul'],
+            'deskripsi' => $validated['deskripsi'],
+            'tanggal' => $validated['tanggal'],
+            'status' => $validated['status'],
             'foto' => $storedFotos[0] ?? null,
             'fotos' => $storedFotos,
         ]);
-
-        $informasi->update(['status' => ProgramBanjar::STATUS_SELESAI]);
 
         $this->redirectRoute('dokumentasi.index', navigate: true);
     }
@@ -87,22 +74,11 @@ new #[Title('Tambah Dokumentasi')] class extends Component
     </div>
 
     <form wire:submit="save" class="space-y-5 rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900">
-        <flux:select wire:model.live="program_banjar_id" :label="__('Informasi Kegiatan Published')">
-            <flux:select.option value="">{{ __('Pilih informasi kegiatan') }}</flux:select.option>
-            @foreach ($this->informasiKegiatan as $informasi)
-                <flux:select.option value="{{ $informasi->id }}">{{ $informasi->judul }} - {{ $informasi->tanggal->format('d M Y') }}</flux:select.option>
-            @endforeach
-        </flux:select>
-
-        @if ($this->selectedInformasi)
-            <div class="rounded-lg border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-800">
-                <p class="font-semibold text-zinc-950 dark:text-white">{{ $this->selectedInformasi->judul }}</p>
-                <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">{{ $this->selectedInformasi->tanggal->format('d M Y') }}</p>
-                <p class="mt-3 whitespace-pre-line text-sm text-zinc-700 dark:text-zinc-200">{{ $this->selectedInformasi->deskripsi }}</p>
-            </div>
-        @endif
-
-        <flux:input wire:model="fotos" :label="__('Foto Bukti Kegiatan')" type="file" accept="image/*" multiple />
+        <flux:input wire:model="judul" :label="__('Judul')" required />
+        <flux:textarea wire:model="deskripsi" :label="__('Deskripsi')" rows="6" required />
+        <flux:input wire:model="tanggal" :label="__('Tanggal')" type="date" required />
+        <flux:select wire:model="status" :label="__('Status')">@foreach ($this->statusOptions as $statusOption)<flux:select.option value="{{ $statusOption }}">{{ $statusOption }}</flux:select.option>@endforeach</flux:select>
+        <flux:input wire:model="fotos" :label="__('Foto Dokumentasi')" type="file" accept="image/*" multiple />
 
         @if ($fotos)
             <div class="grid gap-3 sm:grid-cols-3">

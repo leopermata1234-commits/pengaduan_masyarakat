@@ -21,6 +21,9 @@ new #[Title('Pengaduan')] class extends Component
     #[Url]
     public string $status = '';
 
+    #[Url]
+    public string $cakupan = 'semua';
+
     public function updatedSearch(): void
     {
         $this->resetPage();
@@ -31,12 +34,18 @@ new #[Title('Pengaduan')] class extends Component
         $this->resetPage();
     }
 
+    public function updatedCakupan(): void
+    {
+        $this->resetPage();
+    }
+
     #[Computed]
     public function pengaduan()
     {
         return Pengaduan::query()
             ->with('user')
             ->visibleTo(auth()->user())
+            ->when($this->cakupan === 'saya', fn (Builder $query) => $query->where('user_id', auth()->id()))
             ->when($this->search !== '', fn (Builder $query) => $query
                 ->where(fn (Builder $query) => $query
                     ->where('judul', 'like', "%{$this->search}%")
@@ -87,13 +96,20 @@ new #[Title('Pengaduan')] class extends Component
                 <p class="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{{ __('Pantau dan kelola laporan masyarakat.') }}</p>
             </div>
         </div>
-
-        @can('pengaduan.create')
-            <flux:button icon="plus" variant="primary" :href="route('pengaduan.create')" wire:navigate>{{ __('Buat Pengaduan') }}</flux:button>
-        @endcan
     </div>
 
     <div class="rounded-lg border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900">
+        <div class="flex flex-col gap-3 border-b border-zinc-200 p-4 dark:border-zinc-700 sm:flex-row sm:items-center sm:justify-between">
+            <flux:radio.group wire:model.live="cakupan" variant="segmented">
+                <flux:radio value="semua">{{ __('Semua Pengaduan') }}</flux:radio>
+                <flux:radio value="saya">{{ __('Pengaduan Saya') }}</flux:radio>
+            </flux:radio.group>
+
+            @can('pengaduan.create')
+                <flux:button icon="plus" variant="primary" :href="route('pengaduan.create')" wire:navigate>{{ __('Buat Pengaduan') }}</flux:button>
+            @endcan
+        </div>
+
         <div class="grid gap-3 border-b border-zinc-200 p-4 dark:border-zinc-700 md:grid-cols-[1fr_220px]">
             <flux:input wire:model.live.debounce.400ms="search" icon="magnifying-glass" :placeholder="__('Cari pengaduan')" />
             <flux:select wire:model.live="status">

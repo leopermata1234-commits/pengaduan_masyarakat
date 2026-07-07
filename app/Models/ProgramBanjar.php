@@ -6,7 +6,6 @@ use Database\Factories\ProgramBanjarFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ProgramBanjar extends Model
 {
@@ -42,14 +41,6 @@ class ProgramBanjar extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
-    }
-
-    /**
-     * @return HasMany<DokumentasiKegiatan, $this>
-     */
-    public function dokumentasiKegiatan(): HasMany
-    {
-        return $this->hasMany(DokumentasiKegiatan::class);
     }
 
     /**

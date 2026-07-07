@@ -63,7 +63,7 @@ class LayananMasyarakatSeeder extends Seeder
         }
 
         if (ProgramBanjar::query()->doesntExist()) {
-            $kegiatanSelesai = ProgramBanjar::factory()
+            ProgramBanjar::factory()
                 ->for($admin)
                 ->selesai()
                 ->create([
@@ -80,15 +80,6 @@ class LayananMasyarakatSeeder extends Seeder
                     'tanggal' => now()->addWeeks(2)->toDateString(),
                     'status' => ProgramBanjar::STATUS_DRAFT,
                 ]);
-        } else {
-            $kegiatanSelesai = ProgramBanjar::query()
-                ->where('status', ProgramBanjar::STATUS_SELESAI)
-                ->first();
-
-            if (! $kegiatanSelesai) {
-                $kegiatanSelesai = ProgramBanjar::query()->oldest()->first();
-                $kegiatanSelesai?->update(['status' => ProgramBanjar::STATUS_SELESAI]);
-            }
         }
 
         if (DokumentasiKegiatan::query()->doesntExist()) {
@@ -96,18 +87,11 @@ class LayananMasyarakatSeeder extends Seeder
                 ->for($admin)
                 ->published()
                 ->create([
-                    'program_banjar_id' => $kegiatanSelesai?->id,
                     'judul' => 'Dokumentasi Kegiatan Bersih Lingkungan',
                     'deskripsi' => 'Dokumentasi kegiatan gotong royong warga di lingkungan Banjar Puluk-Puluk.',
                     'tanggal' => now()->subWeek()->toDateString(),
                     'fotos' => [],
                 ]);
-        } elseif ($kegiatanSelesai) {
-            DokumentasiKegiatan::query()
-                ->whereNull('program_banjar_id')
-                ->oldest()
-                ->first()
-                ?->update(['program_banjar_id' => $kegiatanSelesai->id]);
         }
     }
 
