@@ -2,6 +2,7 @@
 
 use App\Models\Pengaduan;
 use App\Models\TanggapanPengaduan;
+use App\Notifications\PengaduanStatusDiverifikasiNotification;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -44,6 +45,8 @@ new #[Title('Detail Pengaduan')] class extends Component
             ],
         ]);
 
+        $statusSebelumnya = $this->pengaduan->status;
+
         $this->pengaduan->update(['status' => $validated['status']]);
 
         if ($validated['status'] === Pengaduan::STATUS_DITOLAK && $this->pengaduan->wasChanged('status')) {
@@ -54,6 +57,10 @@ new #[Title('Detail Pengaduan')] class extends Component
                     'alasan' => $validated['alasan_penolakan'],
                 ]),
             ]);
+        }
+
+        if ($this->pengaduan->wasChanged('status')) {
+            $this->notifyStatusChanged($statusSebelumnya, $validated['alasan_penolakan'] ?? null);
         }
 
         $this->alasan_penolakan = '';
@@ -75,12 +82,33 @@ new #[Title('Detail Pengaduan')] class extends Component
         ]);
 
         if ($this->pengaduan->status === Pengaduan::STATUS_PENDING) {
+            $statusSebelumnya = $this->pengaduan->status;
+
             $this->pengaduan->update(['status' => Pengaduan::STATUS_DIPROSES]);
             $this->status = Pengaduan::STATUS_DIPROSES;
+
+            if ($this->pengaduan->wasChanged('status')) {
+                $this->notifyStatusChanged($statusSebelumnya);
+            }
         }
 
         $this->isi_tanggapan = '';
         $this->pengaduan->refresh()->load(['user', 'tanggapan.admin']);
+    }
+
+    private function notifyStatusChanged(string $statusSebelumnya, ?string $alasanPenolakan = null): void
+    {
+        try {
+            $this->pengaduan->load('user');
+            $this->pengaduan->user?->notify(new PengaduanStatusDiverifikasiNotification(
+                pengaduan: $this->pengaduan,
+                statusSebelumnya: $statusSebelumnya,
+                verifikator: auth()->user(),
+                alasanPenolakan: $alasanPenolakan,
+            ));
+        } catch (Throwable $e) {
+            report($e);
+        }
     }
 };
 ?>

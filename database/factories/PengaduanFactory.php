@@ -25,6 +25,7 @@ class PengaduanFactory extends Factory
             'foto' => null,
             'status' => fake()->randomElement(Pengaduan::STATUSES),
             'visibilitas' => fake()->randomElement(Pengaduan::VISIBILITAS),
+            'reminded_at' => null,
         ];
     }
 

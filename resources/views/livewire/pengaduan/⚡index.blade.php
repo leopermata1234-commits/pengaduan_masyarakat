@@ -1,9 +1,12 @@
 <?php
 
 use App\Models\Pengaduan;
+use App\Models\User;
+use App\Notifications\PengaduanReminderNotification;
 use Flux\Flux;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Title;
@@ -45,6 +48,13 @@ new #[Title('Pengaduan')] class extends Component
         return Pengaduan::query()
             ->with('user')
             ->visibleTo(auth()->user())
+            ->whereNotExists(fn ($query) => $query
+                ->selectRaw('1')
+                ->from('pengaduan as pengaduan_lanjutan')
+                ->whereColumn('pengaduan_lanjutan.user_id', 'pengaduan.user_id')
+                ->whereColumn('pengaduan_lanjutan.judul', 'pengaduan.judul')
+                ->where('pengaduan_lanjutan.status', '!=', Pengaduan::STATUS_MENUNGGU)
+                ->where('pengaduan.status', Pengaduan::STATUS_MENUNGGU))
             ->when($this->cakupan === 'saya', fn (Builder $query) => $query->where('user_id', auth()->id()))
             ->when($this->search !== '', fn (Builder $query) => $query
                 ->where(fn (Builder $query) => $query
@@ -71,11 +81,42 @@ new #[Title('Pengaduan')] class extends Component
 
     public function remind(int $pengaduanId): void
     {
-        $pengaduan = Pengaduan::findOrFail($pengaduanId);
+        $pengaduan = Pengaduan::with('user')->findOrFail($pengaduanId);
 
         abort_unless(auth()->user()->can('pengaduan.ingatkan'), 403);
         abort_unless($pengaduan->user_id === auth()->id(), 403);
-        abort_unless($pengaduan->status === Pengaduan::STATUS_MENUNGGU, 403);
+
+        if (! $pengaduan->isMenunggu()) {
+            Flux::toast(
+                variant: 'warning',
+                text: __('Pengingat hanya bisa dikirim untuk pengaduan yang masih menunggu.')
+            );
+
+            return;
+        }
+
+        if ($pengaduan->isReminderOnCooldown()) {
+            Flux::toast(
+                variant: 'warning',
+                text: __('Pengingat bisa dikirim lagi pada :tanggal.', [
+                    'tanggal' => $pengaduan->reminderAvailableAt()?->format('d M Y H:i'),
+                ])
+            );
+
+            return;
+        }
+
+        try {
+            $penerima = User::permission('pengaduan.notifikasi-email')
+                ->whereKeyNot(auth()->id())
+                ->get();
+
+            Notification::send($penerima, new PengaduanReminderNotification($pengaduan));
+        } catch (Throwable $e) {
+            report($e);
+        }
+
+        $pengaduan->update(['reminded_at' => now()]);
 
         Flux::toast(
             variant: 'success',
@@ -144,8 +185,12 @@ new #[Title('Pengaduan')] class extends Component
                                     <div class="flex items-center justify-center gap-1.5">
                                         <flux:button size="sm" variant="ghost" class="min-w-20 justify-center" :href="route('pengaduan.show', $item)" wire:navigate>{{ __('Detail') }}</flux:button>
                                         @can('pengaduan.ingatkan')
-                                            @if ($item->user_id === auth()->id() && $item->status === Pengaduan::STATUS_MENUNGGU)
-                                                <flux:button size="sm" variant="ghost" class="min-w-20 justify-center" wire:click="remind({{ $item->id }})">{{ __('Ingatkan') }}</flux:button>
+                                            @if ($item->user_id === auth()->id() && $item->isMenunggu())
+                                                @if ($item->isReminderOnCooldown())
+                                                    <flux:button size="sm" variant="ghost" class="min-w-20 justify-center" disabled>{{ __('Cooldown') }}</flux:button>
+                                                @else
+                                                    <flux:button size="sm" variant="ghost" class="min-w-20 justify-center" wire:click="remind({{ $item->id }})">{{ __('Ingatkan') }}</flux:button>
+                                                @endif
                                             @endif
                                         @endcan
                                     </div>

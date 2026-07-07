@@ -49,7 +49,42 @@ class Pengaduan extends Model
         'foto',
         'status',
         'visibilitas',
+        'reminded_at',
     ];
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'reminded_at' => 'datetime',
+        ];
+    }
+
+    public function isMenunggu(): bool
+    {
+        return $this->status === self::STATUS_MENUNGGU;
+    }
+
+    public function reminderAvailableAt(): ?\Carbon\CarbonInterface
+    {
+        return $this->reminded_at?->copy()->addDays(3);
+    }
+
+    public function isReminderOnCooldown(): bool
+    {
+        return $this->reminderAvailableAt()?->isFuture() ?? false;
+    }
+
+    public function canBeRemindedBy(?User $user): bool
+    {
+        return $user !== null
+            && $user->can('pengaduan.ingatkan')
+            && (int) $this->user_id === (int) $user->id
+            && $this->isMenunggu()
+            && ! $this->isReminderOnCooldown();
+    }
 
     /**
      * @param  Builder<Pengaduan>  $query

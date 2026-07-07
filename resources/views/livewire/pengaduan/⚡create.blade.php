@@ -1,7 +1,10 @@
 <?php
 
 use App\Models\Pengaduan;
+use App\Models\User;
+use App\Notifications\PengaduanBaruNotification;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -31,7 +34,7 @@ new #[Title('Buat Pengaduan')] class extends Component
             'foto' => ['nullable', 'image', 'max:2048'],
         ]);
 
-        Pengaduan::create([
+        $pengaduan = Pengaduan::create([
             'user_id' => auth()->id(),
             'judul' => $validated['judul'],
             'isi_pengaduan' => $validated['isi_pengaduan'],
@@ -39,6 +42,16 @@ new #[Title('Buat Pengaduan')] class extends Component
             'status' => Pengaduan::STATUS_PENDING,
             'visibilitas' => $validated['visibilitas'],
         ]);
+
+        try {
+            $penerima = User::permission('pengaduan.notifikasi-email')
+                ->whereKeyNot(auth()->id())
+                ->get();
+
+            Notification::send($penerima, new PengaduanBaruNotification($pengaduan->load('user')));
+        } catch (Throwable $e) {
+            report($e);
+        }
 
         $this->redirectRoute('pengaduan.index', navigate: true);
     }
