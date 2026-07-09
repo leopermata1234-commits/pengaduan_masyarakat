@@ -32,7 +32,7 @@ class PengaduanBaruNotification extends Notification implements ShouldQueue
             ->line(__('Pelapor: :nama', ['nama' => $this->pengaduan->user?->name ?? __('Masyarakat')]))
             ->line(__('Judul: :judul', ['judul' => $this->pengaduan->judul]))
             ->line(__('Status: :status', ['status' => $this->pengaduan->status]))
-            ->line(__('Visibilitas: :visibilitas', ['visibilitas' => $this->pengaduan->visibilitas]))
+            ->line(__('Sifat: :visibilitas', ['visibilitas' => $this->pengaduan->visibilitas]))
             ->line(str($this->pengaduan->isi_pengaduan)->limit(180)->toString())
             ->action(__('Lihat Pengaduan'), route('pengaduan.show', $this->pengaduan))
             ->line(__('Silakan cek dan tindak lanjuti pengaduan ini melalui sistem.'));

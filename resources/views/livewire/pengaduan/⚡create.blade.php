@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Title;
 use Livewire\Component;
-use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
 
 new #[Title('Buat Pengaduan')] class extends Component
@@ -19,9 +18,9 @@ new #[Title('Buat Pengaduan')] class extends Component
 
     public string $isi_pengaduan = '';
 
-    public string $visibilitas = Pengaduan::VISIBILITAS_PRIVAT;
+    public string $visibilitas = Pengaduan::VISIBILITAS_PUBLIK;
 
-    public ?TemporaryUploadedFile $foto = null;
+    public array $fotos = [];
 
     public function save(): void
     {
@@ -31,14 +30,21 @@ new #[Title('Buat Pengaduan')] class extends Component
             'judul' => ['required', 'string', 'max:255'],
             'isi_pengaduan' => ['required', 'string'],
             'visibilitas' => ['required', Rule::in(Pengaduan::VISIBILITAS)],
-            'foto' => ['nullable', 'image', 'max:2048'],
+            'fotos' => ['nullable', 'array', 'max:5'],
+            'fotos.*' => ['image', 'max:2048'],
         ]);
+
+        $storedFotos = collect($this->fotos)
+            ->map(fn ($foto) => $foto->store('pengaduan', 'public'))
+            ->values()
+            ->all();
 
         $pengaduan = Pengaduan::create([
             'user_id' => auth()->id(),
             'judul' => $validated['judul'],
             'isi_pengaduan' => $validated['isi_pengaduan'],
-            'foto' => $this->foto?->store('pengaduan', 'public'),
+            'foto' => $storedFotos[0] ?? null,
+            'fotos' => $storedFotos,
             'status' => Pengaduan::STATUS_PENDING,
             'visibilitas' => $validated['visibilitas'],
         ]);
@@ -66,12 +72,33 @@ new #[Title('Buat Pengaduan')] class extends Component
     <form wire:submit="save" class="space-y-5 rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900">
         <flux:input wire:model="judul" :label="__('Judul')" required />
         <flux:textarea wire:model="isi_pengaduan" :label="__('Isi Pengaduan')" rows="6" required />
-        <flux:select wire:model="visibilitas" :label="__('Visibilitas')">
+        <flux:select wire:model="visibilitas" :label="__('Sifat')">
             @foreach (Pengaduan::VISIBILITAS as $visibilitasOption)
                 <flux:select.option value="{{ $visibilitasOption }}">{{ $visibilitasOption }}</flux:select.option>
             @endforeach
         </flux:select>
-        <flux:input wire:model="foto" :label="__('Foto')" type="file" accept="image/*" />
+        <div class="space-y-2">
+            <label for="fotos" class="text-sm font-medium text-zinc-700 dark:text-zinc-200">{{ __('Foto') }}</label>
+            <input
+                id="fotos"
+                wire:model="fotos"
+                type="file"
+                accept="image/*"
+                multiple
+                class="block w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-700 file:mr-4 file:rounded-md file:border-0 file:bg-zinc-100 file:px-3 file:py-2 file:text-sm file:font-medium file:text-zinc-700 hover:file:bg-zinc-200 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:file:bg-zinc-800 dark:file:text-zinc-200"
+            />
+            <p class="text-xs text-zinc-500 dark:text-zinc-400">{{ __('Maksimal 5 foto, masing-masing 2 MB.') }}</p>
+            @error('fotos') <p class="text-sm text-red-600 dark:text-red-400">{{ $message }}</p> @enderror
+            @error('fotos.*') <p class="text-sm text-red-600 dark:text-red-400">{{ $message }}</p> @enderror
+        </div>
+
+        @if ($fotos)
+            <div class="grid gap-3 sm:grid-cols-3">
+                @foreach ($fotos as $foto)
+                    <img src="{{ $foto->temporaryUrl() }}" alt="Preview foto pengaduan" class="aspect-video rounded-lg border border-zinc-200 object-cover dark:border-zinc-700">
+                @endforeach
+            </div>
+        @endif
         <div class="flex justify-end gap-2">
             <flux:button variant="filled" :href="route('pengaduan.index')" wire:navigate>{{ __('Batal') }}</flux:button>
             <flux:button type="submit" variant="primary">{{ __('Simpan') }}</flux:button>

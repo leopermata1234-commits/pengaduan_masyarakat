@@ -2,8 +2,6 @@
 
 use App\Models\DokumentasiKegiatan;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Validation\Rule;
-use Livewire\Attributes\Computed;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -15,20 +13,7 @@ new #[Title('Tambah Dokumentasi')] class extends Component
     public string $judul = '';
     public string $deskripsi = '';
     public string $tanggal = '';
-    public string $status = DokumentasiKegiatan::STATUS_DRAFT;
     public array $fotos = [];
-
-    /**
-     * @return array<int, string>
-     */
-    #[Computed]
-    public function statusOptions(): array
-    {
-        return [
-            DokumentasiKegiatan::STATUS_DRAFT,
-            DokumentasiKegiatan::STATUS_PUBLISHED,
-        ];
-    }
 
     public function save(): void
     {
@@ -38,7 +23,6 @@ new #[Title('Tambah Dokumentasi')] class extends Component
             'judul' => ['required', 'string', 'max:255'],
             'deskripsi' => ['required', 'string'],
             'tanggal' => ['required', 'date'],
-            'status' => ['required', Rule::in($this->statusOptions)],
             'fotos' => ['required', 'array', 'min:1'],
             'fotos.*' => ['image', 'max:2048'],
         ]);
@@ -53,7 +37,7 @@ new #[Title('Tambah Dokumentasi')] class extends Component
             'judul' => $validated['judul'],
             'deskripsi' => $validated['deskripsi'],
             'tanggal' => $validated['tanggal'],
-            'status' => $validated['status'],
+            'status' => DokumentasiKegiatan::STATUS_PUBLISHED,
             'foto' => $storedFotos[0] ?? null,
             'fotos' => $storedFotos,
         ]);
@@ -77,7 +61,6 @@ new #[Title('Tambah Dokumentasi')] class extends Component
         <flux:input wire:model="judul" :label="__('Judul')" required />
         <flux:textarea wire:model="deskripsi" :label="__('Deskripsi')" rows="6" required />
         <flux:input wire:model="tanggal" :label="__('Tanggal')" type="date" required />
-        <flux:select wire:model="status" :label="__('Status')">@foreach ($this->statusOptions as $statusOption)<flux:select.option value="{{ $statusOption }}">{{ $statusOption }}</flux:select.option>@endforeach</flux:select>
         <flux:input wire:model="fotos" :label="__('Foto Dokumentasi')" type="file" accept="image/*" multiple />
 
         @if ($fotos)

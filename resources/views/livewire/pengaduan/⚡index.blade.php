@@ -75,6 +75,12 @@ new #[Title('Pengaduan')] class extends Component
             Storage::disk('public')->delete($pengaduan->foto);
         }
 
+        foreach ($pengaduan->fotos ?? [] as $foto) {
+            if ($foto !== $pengaduan->foto) {
+                Storage::disk('public')->delete($foto);
+            }
+        }
+
         $pengaduan->delete();
         $this->resetPage();
     }

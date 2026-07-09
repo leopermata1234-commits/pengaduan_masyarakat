@@ -9,15 +9,19 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ProgramBanjar extends Model
 {
-    public const STATUS_DRAFT = 'Draft';
+    public const STATUS_RENCANA = 'Rencana';
 
-    public const STATUS_PUBLISHED = 'Published';
+    public const STATUS_BERJALAN = 'Berjalan';
 
     public const STATUS_SELESAI = 'Selesai';
 
+    public const STATUS_DRAFT = self::STATUS_RENCANA;
+
+    public const STATUS_PUBLISHED = self::STATUS_BERJALAN;
+
     public const STATUSES = [
-        self::STATUS_DRAFT,
-        self::STATUS_PUBLISHED,
+        self::STATUS_RENCANA,
+        self::STATUS_BERJALAN,
         self::STATUS_SELESAI,
     ];
 
@@ -31,6 +35,8 @@ class ProgramBanjar extends Model
         'judul',
         'deskripsi',
         'tanggal',
+        'tanggal_mulai',
+        'tanggal_selesai',
         'gambar',
         'status',
     ];
@@ -50,6 +56,8 @@ class ProgramBanjar extends Model
     {
         return [
             'tanggal' => 'date',
+            'tanggal_mulai' => 'date',
+            'tanggal_selesai' => 'date',
         ];
     }
 }

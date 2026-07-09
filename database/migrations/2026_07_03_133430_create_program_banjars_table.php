@@ -17,11 +17,13 @@ return new class extends Migration
             $table->string('judul');
             $table->text('deskripsi');
             $table->date('tanggal');
+            $table->date('tanggal_mulai')->nullable();
+            $table->date('tanggal_selesai')->nullable();
             $table->string('gambar')->nullable();
-            $table->string('status')->default('Draft');
+            $table->string('status')->default('Rencana');
             $table->timestamps();
 
-            $table->index(['status', 'tanggal']);
+            $table->index(['status', 'tanggal_mulai']);
         });
     }
 

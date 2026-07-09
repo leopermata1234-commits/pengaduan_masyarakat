@@ -23,6 +23,7 @@ class PengaduanFactory extends Factory
             'judul' => fake()->sentence(4),
             'isi_pengaduan' => fake()->paragraph(),
             'foto' => null,
+            'fotos' => [],
             'status' => fake()->randomElement(Pengaduan::STATUSES),
             'visibilitas' => fake()->randomElement(Pengaduan::VISIBILITAS),
             'reminded_at' => null,

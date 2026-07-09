@@ -19,7 +19,7 @@ class ProgramBanjarPolicy
         }
 
         return ! $user->hasRole('Masyarakat')
-            || in_array($programBanjar->status, [ProgramBanjar::STATUS_PUBLISHED, ProgramBanjar::STATUS_SELESAI], true);
+            || in_array($programBanjar->status, [ProgramBanjar::STATUS_BERJALAN, ProgramBanjar::STATUS_SELESAI], true);
     }
 
     public function create(User $user): bool

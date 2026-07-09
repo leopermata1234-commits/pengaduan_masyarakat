@@ -18,6 +18,10 @@ new #[Title('Dokumentasi')] class extends Component
     #[Url(as: 'q')]
     public string $search = '';
 
+    public ?int $selectedDokumentasiId = null;
+
+    public bool $showDetailModal = false;
+
     public function updatedSearch(): void
     {
         $this->resetPage();
@@ -35,6 +39,25 @@ new #[Title('Dokumentasi')] class extends Component
                     ->orWhere('deskripsi', 'like', "%{$this->search}%")))
             ->latest('tanggal')
             ->paginate(10);
+    }
+
+    #[Computed]
+    public function selectedDokumentasi(): ?DokumentasiKegiatan
+    {
+        if (! $this->selectedDokumentasiId) {
+            return null;
+        }
+
+        return DokumentasiKegiatan::query()->find($this->selectedDokumentasiId);
+    }
+
+    public function openDetail(int $dokumentasiId): void
+    {
+        $dokumentasi = DokumentasiKegiatan::findOrFail($dokumentasiId);
+        Gate::authorize('view', $dokumentasi);
+
+        $this->selectedDokumentasiId = $dokumentasi->id;
+        $this->showDetailModal = true;
     }
 
     public function delete(int $dokumentasiId): void
@@ -97,19 +120,19 @@ new #[Title('Dokumentasi')] class extends Component
                                 @if ($fotoPaths)
                                     <div class="flex snap-x snap-mandatory overflow-x-auto scroll-smooth">
                                         @foreach ($fotoPaths as $index => $foto)
-                                            <a href="{{ $this->fotoUrl($foto) }}" target="_blank" class="block w-full shrink-0 snap-start">
+                                            <button type="button" wire:click="openDetail({{ $item->id }})" class="block w-full shrink-0 snap-start text-left">
                                                 <img
                                                     src="{{ $this->fotoUrl($foto) }}"
                                                     alt="{{ $item->judul }} {{ $index + 1 }}"
                                                     class="aspect-[16/9] w-full object-cover"
                                                 >
-                                            </a>
+                                            </button>
                                         @endforeach
                                     </div>
                                 @else
-                                    <div class="flex aspect-[16/9] w-full items-center justify-center bg-zinc-100 text-sm text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
+                                    <button type="button" wire:click="openDetail({{ $item->id }})" class="flex aspect-[16/9] w-full items-center justify-center bg-zinc-100 text-sm text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
                                         {{ __('Tidak ada foto') }}
-                                    </div>
+                                    </button>
                                 @endif
 
                                 <div class="absolute left-3 top-3 rounded-md bg-zinc-950/65 px-2.5 py-1 text-xs font-medium text-white backdrop-blur">
@@ -130,22 +153,23 @@ new #[Title('Dokumentasi')] class extends Component
                             </div>
 
                             <div class="space-y-3 p-4">
-                                <div class="flex items-start justify-between gap-3">
-                                    <h2 class="line-clamp-2 min-h-12 text-base font-semibold leading-6 text-zinc-950 dark:text-white">{{ $item->judul }}</h2>
+                                <div>
+                                    <button type="button" wire:click="openDetail({{ $item->id }})" class="block w-full text-left">
+                                        <h2 class="line-clamp-2 min-h-12 text-base font-semibold leading-6 text-zinc-950 dark:text-white">{{ $item->judul }}</h2>
+                                    </button>
+                                </div>
 
+                                <button type="button" wire:click="openDetail({{ $item->id }})" class="block w-full text-left">
+                                    <p class="line-clamp-3 min-h-16 text-sm leading-5 text-zinc-600 dark:text-zinc-300">{{ $item->deskripsi }}</p>
+                                </button>
+
+                                <div class="flex items-center justify-end gap-3 border-t border-zinc-200 pt-3 text-xs text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
                                     @canany(['dokumentasi.edit', 'dokumentasi.delete'])
                                         <div class="flex shrink-0 gap-1">
                                             @can('dokumentasi.edit')<flux:button size="sm" variant="ghost" icon="pencil" :href="route('dokumentasi.edit', $item)" wire:navigate />@endcan
                                             @can('dokumentasi.delete')<flux:button size="sm" variant="ghost" icon="trash" wire:click="delete({{ $item->id }})" wire:confirm="{{ __('Hapus dokumentasi ini?') }}" />@endcan
                                         </div>
                                     @endcanany
-                                </div>
-
-                                <p class="line-clamp-3 min-h-16 text-sm leading-5 text-zinc-600 dark:text-zinc-300">{{ $item->deskripsi }}</p>
-
-                                <div class="flex items-center justify-between gap-3 border-t border-zinc-200 pt-3 text-xs text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
-                                    <span class="truncate">{{ $item->user->name }}</span>
-                                    <span class="shrink-0 rounded-md border border-zinc-200 px-2 py-1 dark:border-zinc-700">{{ $item->status }}</span>
                                 </div>
                             </div>
                         </article>
@@ -157,4 +181,41 @@ new #[Title('Dokumentasi')] class extends Component
         </div>
         <div class="border-t border-zinc-200 p-4 dark:border-zinc-700">{{ $this->dokumentasi->links() }}</div>
     </div>
+
+    <flux:modal name="detail-dokumentasi" wire:model="showDetailModal" focusable class="max-w-4xl">
+        @if ($this->selectedDokumentasi)
+            @php($detailFotoPaths = $this->fotoPaths($this->selectedDokumentasi))
+
+            <div class="space-y-5">
+                <div>
+                    <flux:heading size="lg">{{ $this->selectedDokumentasi->judul }}</flux:heading>
+                    <flux:subheading>{{ $this->selectedDokumentasi->tanggal->format('d M Y') }}</flux:subheading>
+                </div>
+
+                @if ($detailFotoPaths)
+                    <div class="flex max-h-[70vh] snap-x snap-mandatory overflow-x-auto rounded-lg border border-zinc-200 bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800">
+                        @foreach ($detailFotoPaths as $index => $foto)
+                            <img
+                                src="{{ $this->fotoUrl($foto) }}"
+                                alt="{{ $this->selectedDokumentasi->judul }} {{ $index + 1 }}"
+                                class="max-h-[70vh] w-full shrink-0 snap-start object-contain"
+                            >
+                        @endforeach
+                    </div>
+                @else
+                    <div class="flex aspect-video w-full items-center justify-center rounded-lg bg-zinc-100 text-sm text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
+                        {{ __('Tidak ada foto') }}
+                    </div>
+                @endif
+
+                <p class="text-sm leading-6 text-zinc-700 dark:text-zinc-300">{{ $this->selectedDokumentasi->deskripsi }}</p>
+
+                <div class="flex justify-end">
+                    <flux:modal.close>
+                        <flux:button variant="filled">{{ __('Tutup') }}</flux:button>
+                    </flux:modal.close>
+                </div>
+            </div>
+        @endif
+    </flux:modal>
 </section>

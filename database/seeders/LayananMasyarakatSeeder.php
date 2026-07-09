@@ -70,6 +70,8 @@ class LayananMasyarakatSeeder extends Seeder
                     'judul' => 'Kerja Bakti Banjar Puluk-Puluk',
                     'deskripsi' => 'Kegiatan gotong royong membersihkan area lingkungan banjar.',
                     'tanggal' => now()->subWeek()->toDateString(),
+                    'tanggal_mulai' => now()->subWeek()->toDateString(),
+                    'tanggal_selesai' => now()->subWeek()->toDateString(),
                 ]);
 
             ProgramBanjar::factory()
@@ -78,7 +80,9 @@ class LayananMasyarakatSeeder extends Seeder
                     'judul' => 'Rapat Koordinasi Krama Banjar',
                     'deskripsi' => 'Pembahasan program layanan masyarakat dan agenda kegiatan bulan depan.',
                     'tanggal' => now()->addWeeks(2)->toDateString(),
-                    'status' => ProgramBanjar::STATUS_DRAFT,
+                    'tanggal_mulai' => now()->addWeeks(2)->toDateString(),
+                    'tanggal_selesai' => now()->addWeeks(2)->toDateString(),
+                    'status' => ProgramBanjar::STATUS_RENCANA,
                 ]);
         }
 

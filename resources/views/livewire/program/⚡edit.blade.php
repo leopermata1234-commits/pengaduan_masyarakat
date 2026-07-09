@@ -17,7 +17,8 @@ new #[Title('Edit Program')] class extends Component
     public ProgramBanjar $programBanjar;
     public string $judul = '';
     public string $deskripsi = '';
-    public string $tanggal = '';
+    public string $tanggal_mulai = '';
+    public string $tanggal_selesai = '';
     public string $status = '';
     public ?TemporaryUploadedFile $gambar = null;
 
@@ -33,7 +34,8 @@ new #[Title('Edit Program')] class extends Component
         $this->programBanjar = $programBanjar;
         $this->judul = $programBanjar->judul;
         $this->deskripsi = $programBanjar->deskripsi;
-        $this->tanggal = $programBanjar->tanggal->format('Y-m-d');
+        $this->tanggal_mulai = ($programBanjar->tanggal_mulai ?? $programBanjar->tanggal)->format('Y-m-d');
+        $this->tanggal_selesai = ($programBanjar->tanggal_selesai ?? $programBanjar->tanggal)->format('Y-m-d');
         $this->status = $programBanjar->status;
     }
 
@@ -44,12 +46,15 @@ new #[Title('Edit Program')] class extends Component
         $validated = $this->validate([
             'judul' => ['required', 'string', 'max:255'],
             'deskripsi' => ['required', 'string'],
-            'tanggal' => ['required', 'date'],
+            'tanggal_mulai' => ['required', 'date'],
+            'tanggal_selesai' => ['required', 'date', 'after_or_equal:tanggal_mulai'],
             'status' => ['required', Rule::in(ProgramBanjar::STATUSES)],
             'gambar' => ['nullable', 'image', 'max:2048'],
         ]);
 
         $data = collect($validated)->except('gambar')->all();
+        $data['tanggal'] = $validated['tanggal_mulai'];
+
         if ($this->gambar) {
             if ($this->programBanjar->gambar) {
                 Storage::disk('public')->delete($this->programBanjar->gambar);
@@ -68,7 +73,10 @@ new #[Title('Edit Program')] class extends Component
     <form wire:submit="save" class="space-y-5 rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900">
         <flux:input wire:model="judul" :label="__('Judul')" required />
         <flux:textarea wire:model="deskripsi" :label="__('Deskripsi')" rows="6" required />
-        <flux:input wire:model="tanggal" :label="__('Tanggal')" type="date" required />
+        <div class="grid gap-5 md:grid-cols-2">
+            <flux:input wire:model="tanggal_mulai" :label="__('Tanggal Mulai')" type="date" required />
+            <flux:input wire:model="tanggal_selesai" :label="__('Tanggal Selesai')" type="date" required />
+        </div>
         <flux:select wire:model="status" :label="__('Status')">@foreach (ProgramBanjar::STATUSES as $statusOption)<flux:select.option value="{{ $statusOption }}">{{ $statusOption }}</flux:select.option>@endforeach</flux:select>
         <flux:input wire:model="gambar" :label="__('Ganti Foto Program')" type="file" accept="image/*" />
 

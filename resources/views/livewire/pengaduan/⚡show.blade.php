@@ -24,6 +24,14 @@ new #[Title('Detail Pengaduan')] class extends Component
         return '/storage/'.Str::of($foto)->ltrim('/');
     }
 
+    /**
+     * @return array<int, string>
+     */
+    public function fotoPaths(): array
+    {
+        return $this->pengaduan->fotoPaths();
+    }
+
     public function mount(Pengaduan $pengaduan): void
     {
         Gate::authorize('view', $pengaduan);
@@ -125,16 +133,20 @@ new #[Title('Detail Pengaduan')] class extends Component
                 <p class="text-sm text-zinc-500">{{ __('Pelapor') }}: {{ $pengaduan->user->name }} &middot; {{ $pengaduan->created_at->format('d M Y') }}</p>
                 <p class="mt-4 whitespace-pre-line text-zinc-800 dark:text-zinc-100">{{ $pengaduan->isi_pengaduan }}</p>
             </div>
-            @if ($pengaduan->foto)
+            @if ($this->fotoPaths())
                 <div class="space-y-3">
                     <p class="text-sm font-medium text-zinc-700 dark:text-zinc-200">{{ __('Foto Pengaduan') }}</p>
-                    <a href="{{ $this->fotoUrl($pengaduan->foto) }}" target="_blank" class="block">
-                        <img
-                            src="{{ $this->fotoUrl($pengaduan->foto) }}"
-                            alt="{{ $pengaduan->judul }}"
-                            class="max-h-[32rem] w-full rounded-lg border border-zinc-200 object-contain dark:border-zinc-700"
-                        >
-                    </a>
+                    <div class="grid gap-3 sm:grid-cols-2">
+                        @foreach ($this->fotoPaths() as $index => $foto)
+                            <a href="{{ $this->fotoUrl($foto) }}" target="_blank" class="block">
+                                <img
+                                    src="{{ $this->fotoUrl($foto) }}"
+                                    alt="{{ $pengaduan->judul }} {{ $index + 1 }}"
+                                    class="aspect-video w-full rounded-lg border border-zinc-200 object-cover dark:border-zinc-700"
+                                >
+                            </a>
+                        @endforeach
+                    </div>
                 </div>
             @endif
         </div>
@@ -143,7 +155,7 @@ new #[Title('Detail Pengaduan')] class extends Component
             <div class="rounded-lg border border-zinc-200 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-900">
                 <p class="text-sm text-zinc-500">{{ __('Status Saat Ini') }}</p>
                 <p class="mt-1 text-lg font-semibold text-zinc-950 dark:text-white">{{ $pengaduan->status }}</p>
-                <p class="mt-4 text-sm text-zinc-500">{{ __('Visibilitas') }}</p>
+                <p class="mt-4 text-sm text-zinc-500">{{ __('Sifat') }}</p>
                 <p class="mt-1 text-lg font-semibold text-zinc-950 dark:text-white">{{ $pengaduan->visibilitas }}</p>
                 @can('pengaduan.verify')
                     <form wire:submit="saveStatus" class="mt-4 space-y-3">

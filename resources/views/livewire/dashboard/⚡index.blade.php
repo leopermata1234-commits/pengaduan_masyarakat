@@ -4,6 +4,7 @@ use App\Models\DokumentasiKegiatan;
 use App\Models\Pengaduan;
 use App\Models\ProgramBanjar;
 use App\Models\User;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
@@ -47,6 +48,58 @@ new #[Title('Dashboard')] class extends Component
             ->latest()
             ->limit(5)
             ->get();
+    }
+
+    /**
+     * @return array{items: array<int, array{label: string, count: int}>, total: int, max: int, points: string, area: string}
+     */
+    #[Computed]
+    public function pengaduanTrend(): array
+    {
+        if (Auth::user()?->hasRole('Masyarakat')) {
+            return [
+                'items' => [],
+                'total' => 0,
+                'max' => 0,
+                'points' => '',
+                'area' => '',
+            ];
+        }
+
+        $today = CarbonImmutable::today();
+        $items = collect(range(6, 0))
+            ->map(function (int $daysAgo) use ($today) {
+                $date = $today->subDays($daysAgo);
+
+                return [
+                    'label' => $date->format('d M'),
+                    'count' => (clone $this->pengaduanQuery())
+                        ->whereBetween('created_at', [$date->startOfDay(), $date->endOfDay()])
+                        ->count(),
+                ];
+            })
+            ->values();
+
+        $max = max(1, (int) $items->max('count'));
+        $width = 600;
+        $height = 160;
+        $gap = $items->count() > 1 ? $width / ($items->count() - 1) : $width;
+
+        $points = $items
+            ->map(fn (array $item, int $index) => sprintf(
+                '%.2f,%.2f',
+                $index * $gap,
+                $height - (($item['count'] / $max) * ($height - 20)) - 10
+            ))
+            ->implode(' ');
+
+        return [
+            'items' => $items->all(),
+            'total' => (int) $items->sum('count'),
+            'max' => $max,
+            'points' => $points,
+            'area' => "0,{$height} {$points} {$width},{$height}",
+        ];
     }
 
     private function pengaduanQuery(): Builder
@@ -126,6 +179,49 @@ new #[Title('Dashboard')] class extends Component
             <div class="rounded-lg border border-zinc-200 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-900">
                 <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('Total Dokumentasi') }}</p>
                 <p class="mt-2 text-3xl font-semibold text-zinc-950 dark:text-white">{{ number_format($this->stats['dokumentasi']) }}</p>
+            </div>
+        </div>
+
+        <div class="rounded-lg border border-zinc-200 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-900">
+            <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                    <h2 class="text-base font-semibold text-zinc-950 dark:text-white">{{ __('Statistik Pengaduan') }}</h2>
+                    <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">{{ __('Tren pengaduan masuk selama 7 hari terakhir.') }}</p>
+                </div>
+                <div class="text-left sm:text-right">
+                    <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('Total 7 Hari') }}</p>
+                    <p class="text-2xl font-semibold text-zinc-950 dark:text-white">{{ number_format($this->pengaduanTrend['total']) }}</p>
+                </div>
+            </div>
+
+            <div class="mt-5">
+                <svg viewBox="0 0 600 160" role="img" aria-label="{{ __('Grafik pengaduan 7 hari terakhir') }}" class="h-48 w-full overflow-visible">
+                    <line x1="0" y1="150" x2="600" y2="150" class="stroke-zinc-200 dark:stroke-zinc-700" stroke-width="1" />
+                    <line x1="0" y1="90" x2="600" y2="90" class="stroke-zinc-100 dark:stroke-zinc-800" stroke-width="1" />
+                    <line x1="0" y1="30" x2="600" y2="30" class="stroke-zinc-100 dark:stroke-zinc-800" stroke-width="1" />
+
+                    @if ($this->pengaduanTrend['points'] !== '')
+                        <polygon points="{{ $this->pengaduanTrend['area'] }}" class="fill-sky-100/70 dark:fill-sky-950/40" />
+                        <polyline points="{{ $this->pengaduanTrend['points'] }}" fill="none" class="stroke-sky-600 dark:stroke-sky-400" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+
+                        @foreach ($this->pengaduanTrend['items'] as $index => $item)
+                            @php
+                                $x = count($this->pengaduanTrend['items']) > 1 ? $index * (600 / (count($this->pengaduanTrend['items']) - 1)) : 0;
+                                $y = 160 - (($item['count'] / $this->pengaduanTrend['max']) * 140) - 10;
+                            @endphp
+                            <circle cx="{{ $x }}" cy="{{ $y }}" r="4" class="fill-white stroke-sky-600 dark:fill-zinc-900 dark:stroke-sky-400" stroke-width="3" />
+                        @endforeach
+                    @endif
+                </svg>
+
+                <div class="mt-3 grid grid-cols-7 gap-2 text-center text-xs text-zinc-500 dark:text-zinc-400">
+                    @foreach ($this->pengaduanTrend['items'] as $item)
+                        <div class="min-w-0">
+                            <p class="truncate">{{ $item['label'] }}</p>
+                            <p class="mt-1 font-semibold text-zinc-800 dark:text-zinc-100">{{ number_format($item['count']) }}</p>
+                        </div>
+                    @endforeach
+                </div>
             </div>
         </div>
 

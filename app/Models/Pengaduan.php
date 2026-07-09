@@ -47,6 +47,7 @@ class Pengaduan extends Model
         'judul',
         'isi_pengaduan',
         'foto',
+        'fotos',
         'status',
         'visibilitas',
         'reminded_at',
@@ -58,8 +59,17 @@ class Pengaduan extends Model
     protected function casts(): array
     {
         return [
+            'fotos' => 'array',
             'reminded_at' => 'datetime',
         ];
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public function fotoPaths(): array
+    {
+        return $this->fotos ?? ($this->foto ? [$this->foto] : []);
     }
 
     public function isMenunggu(): bool

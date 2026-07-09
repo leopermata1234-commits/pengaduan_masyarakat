@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('judul');
             $table->text('isi_pengaduan');
             $table->string('foto')->nullable();
+            $table->json('fotos')->nullable();
             $table->string('status')->default('Menunggu');
             $table->timestamps();
 

@@ -21,6 +21,10 @@ new #[Title('Program')] class extends Component
     #[Url]
     public string $status = '';
 
+    public ?int $selectedProgramId = null;
+
+    public bool $showDetailModal = false;
+
     public function updatedSearch(): void
     {
         $this->resetPage();
@@ -41,11 +45,30 @@ new #[Title('Program')] class extends Component
     {
         return ProgramBanjar::query()
             ->with('user')
-            ->when(auth()->user()->hasRole('Masyarakat'), fn (Builder $query) => $query->whereIn('status', [ProgramBanjar::STATUS_PUBLISHED, ProgramBanjar::STATUS_SELESAI]))
-            ->when($this->search !== '', fn (Builder $query) => $query->where('judul', 'like', "%{$this->search}%")->orWhere('deskripsi', 'like', "%{$this->search}%"))
+            ->when(auth()->user()->hasRole('Masyarakat'), fn (Builder $query) => $query->whereIn('status', [ProgramBanjar::STATUS_BERJALAN, ProgramBanjar::STATUS_SELESAI]))
+            ->when($this->search !== '', fn (Builder $query) => $query->where(fn (Builder $query) => $query->where('judul', 'like', "%{$this->search}%")->orWhere('deskripsi', 'like', "%{$this->search}%")))
             ->when($this->status !== '', fn (Builder $query) => $query->where('status', $this->status))
-            ->latest('tanggal')
+            ->latest('tanggal_mulai')
             ->paginate(10);
+    }
+
+    #[Computed]
+    public function selectedProgram(): ?ProgramBanjar
+    {
+        if (! $this->selectedProgramId) {
+            return null;
+        }
+
+        return ProgramBanjar::query()->find($this->selectedProgramId);
+    }
+
+    public function openDetail(int $programId): void
+    {
+        $program = ProgramBanjar::findOrFail($programId);
+        Gate::authorize('view', $program);
+
+        $this->selectedProgramId = $program->id;
+        $this->showDetailModal = true;
     }
 
     public function delete(int $programId): void
@@ -101,21 +124,24 @@ new #[Title('Program')] class extends Component
                         <article class="overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-zinc-700 dark:bg-zinc-900">
                             <div class="relative">
                                 @if ($item->gambar)
-                                    <a href="{{ $this->gambarUrl($item->gambar) }}" target="_blank" class="block">
+                                    <button type="button" wire:click="openDetail({{ $item->id }})" class="block w-full text-left">
                                         <img
                                             src="{{ $this->gambarUrl($item->gambar) }}"
                                             alt="{{ $item->judul }}"
                                             class="aspect-[16/9] w-full object-cover"
                                         >
-                                    </a>
+                                    </button>
                                 @else
-                                    <div class="flex aspect-[16/9] w-full items-center justify-center bg-zinc-100 text-sm text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
+                                    <button type="button" wire:click="openDetail({{ $item->id }})" class="flex aspect-[16/9] w-full items-center justify-center bg-zinc-100 text-sm text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
                                         {{ __('Belum ada foto program') }}
-                                    </div>
+                                    </button>
                                 @endif
 
                                 <div class="absolute left-3 top-3 rounded-md bg-zinc-950/65 px-2.5 py-1 text-xs font-medium text-white backdrop-blur">
-                                    {{ $item->tanggal->format('d M Y') }}
+                                    {{ ($item->tanggal_mulai ?? $item->tanggal)->format('d M Y') }}
+                                    @if (($item->tanggal_selesai ?? null) && ! $item->tanggal_selesai->isSameDay($item->tanggal_mulai ?? $item->tanggal))
+                                        - {{ $item->tanggal_selesai->format('d M Y') }}
+                                    @endif
                                 </div>
 
                                 <div class="absolute bottom-3 right-3 rounded-md bg-zinc-950/70 px-2.5 py-1 text-xs font-medium text-white backdrop-blur">
@@ -124,29 +150,34 @@ new #[Title('Program')] class extends Component
                             </div>
 
                             <div class="space-y-3 p-4">
-                                <div class="flex items-start justify-between gap-3">
-                                    <h2 class="line-clamp-2 min-h-12 text-base font-semibold leading-6 text-zinc-950 dark:text-white">{{ $item->judul }}</h2>
+                                <div>
+                                    <button type="button" wire:click="openDetail({{ $item->id }})" class="block w-full text-left">
+                                        <h2 class="line-clamp-2 min-h-12 text-base font-semibold leading-6 text-zinc-950 dark:text-white">{{ $item->judul }}</h2>
+                                    </button>
+                                </div>
 
+                                <button type="button" wire:click="openDetail({{ $item->id }})" class="block w-full text-left">
+                                    <p class="line-clamp-3 min-h-16 text-sm leading-5 text-zinc-600 dark:text-zinc-300">{{ $item->deskripsi }}</p>
+                                </button>
+
+                                <div class="flex items-center justify-end gap-3 border-t border-zinc-200 pt-3 text-xs text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
                                     @canany(['program.edit', 'program.delete'])
                                         <div class="flex shrink-0 gap-1">
-                                            @can('program.edit')<flux:button size="sm" variant="ghost" icon="pencil" :href="route('program.edit', $item)" wire:navigate />@endcan
+                                            @can('program.edit')
+                                                @if ($item->status === ProgramBanjar::STATUS_RENCANA)
+                                                    <flux:button size="sm" variant="ghost" icon="play" wire:click="setStatus({{ $item->id }}, '{{ ProgramBanjar::STATUS_BERJALAN }}')" />
+                                                @elseif ($item->status === ProgramBanjar::STATUS_BERJALAN)
+                                                    <flux:button size="sm" variant="ghost" icon="check" wire:click="setStatus({{ $item->id }}, '{{ ProgramBanjar::STATUS_SELESAI }}')" />
+                                                @else
+                                                    <flux:button size="sm" variant="ghost" icon="arrow-path" wire:click="setStatus({{ $item->id }}, '{{ ProgramBanjar::STATUS_RENCANA }}')" />
+                                                @endif
+
+                                                <flux:button size="sm" variant="ghost" icon="pencil" :href="route('program.edit', $item)" wire:navigate />
+                                            @endcan
+
                                             @can('program.delete')<flux:button size="sm" variant="ghost" icon="trash" wire:click="delete({{ $item->id }})" wire:confirm="{{ __('Hapus program ini?') }}" />@endcan
                                         </div>
                                     @endcanany
-                                </div>
-
-                                <p class="line-clamp-3 min-h-16 text-sm leading-5 text-zinc-600 dark:text-zinc-300">{{ $item->deskripsi }}</p>
-
-                                <div class="flex items-center justify-between gap-3 border-t border-zinc-200 pt-3 text-xs text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
-                                    <span class="truncate">{{ $item->user->name }}</span>
-
-                                    @can('program.edit')
-                                        @if ($item->status !== ProgramBanjar::STATUS_PUBLISHED)
-                                            <flux:button size="sm" variant="ghost" icon="check" wire:click="setStatus({{ $item->id }}, '{{ ProgramBanjar::STATUS_PUBLISHED }}')" />
-                                        @else
-                                            <flux:button size="sm" variant="ghost" icon="arrow-path" wire:click="setStatus({{ $item->id }}, '{{ ProgramBanjar::STATUS_DRAFT }}')" />
-                                        @endif
-                                    @endcan
                                 </div>
                             </div>
                         </article>
@@ -158,4 +189,43 @@ new #[Title('Program')] class extends Component
         </div>
         <div class="border-t border-zinc-200 p-4 dark:border-zinc-700">{{ $this->program->links() }}</div>
     </div>
+
+    <flux:modal name="detail-program" wire:model="showDetailModal" focusable class="max-w-4xl">
+        @if ($this->selectedProgram)
+            <div class="space-y-5">
+                <div>
+                    <flux:heading size="lg">{{ $this->selectedProgram->judul }}</flux:heading>
+                    <flux:subheading>
+                        {{ ($this->selectedProgram->tanggal_mulai ?? $this->selectedProgram->tanggal)->format('d M Y') }}
+                        @if (($this->selectedProgram->tanggal_selesai ?? null) && ! $this->selectedProgram->tanggal_selesai->isSameDay($this->selectedProgram->tanggal_mulai ?? $this->selectedProgram->tanggal))
+                            - {{ $this->selectedProgram->tanggal_selesai->format('d M Y') }}
+                        @endif
+                        · {{ $this->selectedProgram->status }}
+                    </flux:subheading>
+                </div>
+
+                @if ($this->selectedProgram->gambar)
+                    <div class="max-h-[70vh] overflow-hidden rounded-lg border border-zinc-200 bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800">
+                        <img
+                            src="{{ $this->gambarUrl($this->selectedProgram->gambar) }}"
+                            alt="{{ $this->selectedProgram->judul }}"
+                            class="max-h-[70vh] w-full object-contain"
+                        >
+                    </div>
+                @else
+                    <div class="flex aspect-video w-full items-center justify-center rounded-lg bg-zinc-100 text-sm text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
+                        {{ __('Belum ada foto program') }}
+                    </div>
+                @endif
+
+                <p class="text-sm leading-6 text-zinc-700 dark:text-zinc-300">{{ $this->selectedProgram->deskripsi }}</p>
+
+                <div class="flex justify-end">
+                    <flux:modal.close>
+                        <flux:button variant="filled">{{ __('Tutup') }}</flux:button>
+                    </flux:modal.close>
+                </div>
+            </div>
+        @endif
+    </flux:modal>
 </section>
