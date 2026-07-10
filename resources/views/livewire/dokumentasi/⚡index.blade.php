@@ -11,7 +11,7 @@ use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-new #[Title('Dokumentasi')] class extends Component
+new #[Title('Galeri')] class extends Component
 {
     use WithPagination;
 
@@ -92,22 +92,22 @@ new #[Title('Dokumentasi')] class extends Component
 };
 ?>
 
-<section class="mx-auto flex w-full max-w-7xl flex-col gap-6">
+<section class="mx-auto flex w-full max-w-[1680px] flex-col gap-6">
     <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div class="flex flex-col gap-2">
-            <div class="flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400"><span>{{ __('Layanan') }}</span><span>/</span><span class="font-medium text-zinc-800 dark:text-zinc-100">{{ __('Dokumentasi') }}</span></div>
+            <div class="flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400"><span>{{ __('Layanan') }}</span><span>/</span><span class="font-medium text-zinc-800 dark:text-zinc-100">{{ __('Galeri') }}</span></div>
             <div>
-                <h1 class="text-2xl font-semibold text-zinc-950 dark:text-white">{{ __('Dokumentasi') }}</h1>
-                <p class="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{{ __('Kelola foto dokumentasi Banjar Puluk-Puluk secara mandiri.') }}</p>
+                <h1 class="text-2xl font-semibold text-zinc-950 dark:text-white">{{ __('Galeri') }}</h1>
+                <p class="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{{ __('Kumpulan foto kegiatan Banjar Puluk-Puluk.') }}</p>
             </div>
         </div>
         @can('dokumentasi.create')
-            <flux:button icon="plus" variant="primary" :href="route('dokumentasi.create')" wire:navigate>{{ __('Tambah Dokumentasi') }}</flux:button>
+            <flux:button icon="plus" variant="primary" :href="route('dokumentasi.create')" wire:navigate>{{ __('Tambah Galeri') }}</flux:button>
         @endcan
     </div>
     <div class="rounded-lg border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900">
         <div class="border-b border-zinc-200 p-4 dark:border-zinc-700">
-            <flux:input wire:model.live.debounce.400ms="search" icon="magnifying-glass" :placeholder="__('Cari dokumentasi')" />
+            <flux:input wire:model.live.debounce.400ms="search" icon="magnifying-glass" :placeholder="__('Cari galeri')" />
         </div>
         <div class="p-4">
             @if ($this->dokumentasi->isNotEmpty())
@@ -167,7 +167,7 @@ new #[Title('Dokumentasi')] class extends Component
                                     @canany(['dokumentasi.edit', 'dokumentasi.delete'])
                                         <div class="flex shrink-0 gap-1">
                                             @can('dokumentasi.edit')<flux:button size="sm" variant="ghost" icon="pencil" :href="route('dokumentasi.edit', $item)" wire:navigate />@endcan
-                                            @can('dokumentasi.delete')<flux:button size="sm" variant="ghost" icon="trash" wire:click="delete({{ $item->id }})" wire:confirm="{{ __('Hapus dokumentasi ini?') }}" />@endcan
+                                            @can('dokumentasi.delete')<flux:button size="sm" variant="ghost" icon="trash" wire:click="delete({{ $item->id }})" wire:confirm="{{ __('Hapus galeri ini?') }}" />@endcan
                                         </div>
                                     @endcanany
                                 </div>
@@ -176,7 +176,7 @@ new #[Title('Dokumentasi')] class extends Component
                     @endforeach
                 </div>
             @else
-                <div class="py-10 text-center text-sm text-zinc-500 dark:text-zinc-400">{{ __('Data dokumentasi tidak ditemukan.') }}</div>
+                <div class="py-10 text-center text-sm text-zinc-500 dark:text-zinc-400">{{ __('Data galeri tidak ditemukan.') }}</div>
             @endif
         </div>
         <div class="border-t border-zinc-200 p-4 dark:border-zinc-700">{{ $this->dokumentasi->links() }}</div>

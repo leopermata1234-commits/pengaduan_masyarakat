@@ -18,6 +18,7 @@ class TanggapanPengaduan extends Model
         'pengaduan_id',
         'admin_id',
         'isi_tanggapan',
+        'foto',
     ];
 
     /**

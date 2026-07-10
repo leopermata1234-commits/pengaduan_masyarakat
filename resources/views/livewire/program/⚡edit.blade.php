@@ -68,40 +68,114 @@ new #[Title('Edit Program')] class extends Component
 };
 ?>
 
-<section class="mx-auto flex w-full max-w-3xl flex-col gap-6">
-    <div class="flex flex-col gap-2"><div class="flex items-center gap-2 text-sm text-zinc-500"><a href="{{ route('program.index') }}" wire:navigate>{{ __('Program') }}</a><span>/</span><span>{{ __('Edit') }}</span></div><h1 class="text-2xl font-semibold text-zinc-950 dark:text-white">{{ __('Edit Program') }}</h1></div>
-    <form wire:submit="save" class="space-y-5 rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900">
-        <flux:input wire:model="judul" :label="__('Judul')" required />
-        <flux:textarea wire:model="deskripsi" :label="__('Deskripsi')" rows="6" required />
-        <div class="grid gap-5 md:grid-cols-2">
-            <flux:input wire:model="tanggal_mulai" :label="__('Tanggal Mulai')" type="date" required />
-            <flux:input wire:model="tanggal_selesai" :label="__('Tanggal Selesai')" type="date" required />
+<section class="mx-auto w-full max-w-6xl overflow-hidden rounded-lg bg-zinc-200 text-zinc-950 shadow-sm dark:bg-zinc-900 dark:text-white">
+    <div class="flex items-center justify-between gap-4 bg-zinc-300 px-4 py-3 dark:bg-zinc-800">
+        <div class="flex min-w-0 items-center gap-3">
+            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-zinc-400 text-zinc-600 dark:bg-zinc-700 dark:text-zinc-300">
+                <flux:icon name="calendar-days" class="size-5" />
+            </div>
+            <div class="min-w-0">
+                <p class="truncate text-base font-bold">{{ __('Edit Program') }}</p>
+                <span class="inline-flex rounded bg-zinc-100 px-2 py-0.5 text-xs font-semibold text-zinc-700 dark:bg-zinc-700 dark:text-zinc-100">
+                    {{ $programBanjar->status }}
+                </span>
+            </div>
         </div>
-        <flux:select wire:model="status" :label="__('Status')">@foreach (ProgramBanjar::STATUSES as $statusOption)<flux:select.option value="{{ $statusOption }}">{{ $statusOption }}</flux:select.option>@endforeach</flux:select>
-        <flux:input wire:model="gambar" :label="__('Ganti Foto Program')" type="file" accept="image/*" />
 
-        @if ($gambar)
-            <div class="space-y-3">
-                <p class="text-sm font-medium text-zinc-700 dark:text-zinc-200">{{ __('Preview Foto Baru') }}</p>
-                <img
-                    src="{{ $gambar->temporaryUrl() }}"
-                    alt="{{ __('Preview foto baru') }}"
-                    class="max-h-80 w-full rounded-lg border border-zinc-200 object-contain dark:border-zinc-700"
-                >
-            </div>
-        @elseif ($programBanjar->gambar)
-            <div class="space-y-3">
-                <p class="text-sm font-medium text-zinc-700 dark:text-zinc-200">{{ __('Foto Saat Ini') }}</p>
-                <a href="{{ $this->gambarUrl($programBanjar->gambar) }}" target="_blank" class="block">
-                    <img
-                        src="{{ $this->gambarUrl($programBanjar->gambar) }}"
-                        alt="{{ $programBanjar->judul }}"
-                        class="max-h-80 w-full rounded-lg border border-zinc-200 object-contain dark:border-zinc-700"
-                    >
-                </a>
-            </div>
-        @endif
+        <a href="{{ route('program.index') }}" wire:navigate class="h-6 w-16 rounded-md bg-zinc-100 text-center text-xs font-semibold leading-6 text-zinc-600 transition hover:bg-white dark:bg-zinc-700 dark:text-zinc-200">
+            {{ __('Back') }}
+        </a>
+    </div>
 
-        <div class="flex justify-end gap-2"><flux:button variant="filled" :href="route('program.index')" wire:navigate>{{ __('Batal') }}</flux:button><flux:button type="submit" variant="primary">{{ __('Simpan') }}</flux:button></div>
+    <form wire:submit="save">
+        <div class="space-y-5 px-4 py-6">
+            <div class="max-w-3xl">
+                <label for="judul" class="text-sm font-bold">{{ __('Judul Program') }}</label>
+                <input id="judul" wire:model="judul" type="text" required class="mt-2 w-full rounded-lg border border-zinc-100 bg-zinc-100 px-4 py-3 text-sm font-semibold text-zinc-900 outline-none transition focus:border-zinc-400 focus:ring-2 focus:ring-zinc-400/30 dark:border-zinc-800 dark:bg-zinc-800 dark:text-white">
+                @error('judul') <p class="mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
+            </div>
+
+            <div class="max-w-3xl">
+                <label for="deskripsi" class="text-sm font-bold">{{ __('Deskripsi') }}</label>
+                <textarea id="deskripsi" wire:model="deskripsi" rows="7" required class="mt-2 w-full resize-none rounded-lg border border-zinc-100 bg-zinc-100 px-4 py-3 text-sm text-zinc-900 outline-none transition focus:border-zinc-400 focus:ring-2 focus:ring-zinc-400/30 dark:border-zinc-800 dark:bg-zinc-800 dark:text-white"></textarea>
+                @error('deskripsi') <p class="mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
+            </div>
+
+            <div class="grid max-w-3xl gap-4 md:grid-cols-2">
+                <div>
+                    <label for="tanggal_mulai" class="text-sm font-bold">{{ __('Tanggal Mulai') }}</label>
+                    <input id="tanggal_mulai" wire:model="tanggal_mulai" type="date" required class="mt-2 w-full rounded-lg border border-zinc-100 bg-zinc-100 px-4 py-3 text-sm font-semibold text-zinc-900 outline-none transition focus:border-zinc-400 focus:ring-2 focus:ring-zinc-400/30 dark:border-zinc-800 dark:bg-zinc-800 dark:text-white">
+                    @error('tanggal_mulai') <p class="mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
+                </div>
+
+                <div>
+                    <label for="tanggal_selesai" class="text-sm font-bold">{{ __('Tanggal Selesai') }}</label>
+                    <input id="tanggal_selesai" wire:model="tanggal_selesai" type="date" required class="mt-2 w-full rounded-lg border border-zinc-100 bg-zinc-100 px-4 py-3 text-sm font-semibold text-zinc-900 outline-none transition focus:border-zinc-400 focus:ring-2 focus:ring-zinc-400/30 dark:border-zinc-800 dark:bg-zinc-800 dark:text-white">
+                    @error('tanggal_selesai') <p class="mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
+                </div>
+            </div>
+
+            <div class="max-w-3xl">
+                <p class="mb-2 text-sm font-bold">{{ __('Status Program') }}</p>
+                <div class="grid gap-3 md:grid-cols-3">
+                    @foreach (ProgramBanjar::STATUSES as $statusOption)
+                        <label class="flex cursor-pointer items-center gap-2 rounded-lg bg-zinc-100 px-4 py-3 text-sm font-bold text-zinc-800 ring-1 ring-transparent transition has-[:checked]:bg-white has-[:checked]:ring-zinc-500 dark:bg-zinc-800 dark:text-zinc-100 dark:has-[:checked]:bg-zinc-700">
+                            <input type="radio" wire:model="status" value="{{ $statusOption }}" class="size-3 border-zinc-400 text-zinc-700 focus:ring-zinc-500">
+                            <span>{{ $statusOption }}</span>
+                        </label>
+                    @endforeach
+                </div>
+                @error('status') <p class="mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
+            </div>
+
+            <div class="space-y-3">
+                <p class="text-sm font-bold">{{ __('Foto Program') }}</p>
+                @if ($gambar)
+                    <div class="grid max-w-3xl gap-4 sm:grid-cols-3">
+                        <img
+                            src="{{ $gambar->temporaryUrl() }}"
+                            alt="{{ __('Preview foto baru') }}"
+                            class="aspect-square w-full rounded-lg bg-zinc-300 object-cover dark:bg-zinc-800"
+                        >
+                    </div>
+                @elseif ($programBanjar->gambar)
+                    <div class="grid max-w-3xl gap-4 sm:grid-cols-3">
+                        <a href="{{ $this->gambarUrl($programBanjar->gambar) }}" target="_blank" class="block overflow-hidden rounded-lg bg-zinc-300 dark:bg-zinc-800">
+                            <img
+                                src="{{ $this->gambarUrl($programBanjar->gambar) }}"
+                                alt="{{ $programBanjar->judul }}"
+                                class="aspect-square w-full object-cover"
+                            >
+                        </a>
+                    </div>
+                @else
+                    <div class="grid max-w-3xl gap-4 sm:grid-cols-3">
+                        <div class="flex aspect-square items-center justify-center rounded-lg bg-zinc-300 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-500">
+                            <flux:icon name="photo" class="size-16" />
+                        </div>
+                    </div>
+                @endif
+            </div>
+        </div>
+
+        <div class="border-t-8 border-zinc-100 bg-zinc-200 dark:border-zinc-950 dark:bg-zinc-900">
+            <div class="space-y-5 px-4 py-5">
+                <div>
+                    <label for="gambar" class="text-sm font-bold">{{ __('Unggah Foto Pengganti') }} <span class="font-medium text-zinc-600 dark:text-zinc-400">{{ __('(Opsional, 1 foto)') }}</span></label>
+                    <input id="gambar" wire:model="gambar" type="file" accept="image/*" class="mt-2 block w-full rounded-lg bg-zinc-100 text-sm text-zinc-700 file:mr-4 file:rounded-md file:border-0 file:bg-zinc-300 file:px-4 file:py-2 file:text-sm file:font-bold file:text-zinc-700 hover:file:bg-zinc-400 dark:bg-zinc-800 dark:text-zinc-200 dark:file:bg-zinc-700 dark:file:text-zinc-100">
+                    <p class="mt-1 text-xs font-semibold text-zinc-600 dark:text-zinc-400">{{ __('Format PNG/JPG Maks. 2MB') }}</p>
+                    @error('gambar') <p class="mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
+                </div>
+
+                <div class="flex justify-end gap-2">
+                    <a href="{{ route('program.index') }}" wire:navigate class="rounded-lg bg-zinc-100 px-5 py-3 text-sm font-bold text-zinc-700 transition hover:bg-white dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700">
+                        {{ __('Batal') }}
+                    </a>
+                    <button type="submit" class="rounded-lg bg-zinc-300 px-5 py-3 text-sm font-bold text-zinc-950 transition hover:bg-zinc-400 dark:bg-zinc-700 dark:text-white dark:hover:bg-zinc-600">
+                        {{ __('Simpan Program') }}
+                    </button>
+                </div>
+            </div>
+        </div>
     </form>
 </section>

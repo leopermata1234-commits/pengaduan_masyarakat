@@ -94,13 +94,13 @@ new #[Title('Program')] class extends Component
 };
 ?>
 
-<section class="mx-auto flex w-full max-w-7xl flex-col gap-6">
+<section class="mx-auto flex w-full max-w-[1680px] flex-col gap-6">
     <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div class="flex flex-col gap-2">
             <div class="flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400"><span>{{ __('Layanan') }}</span><span>/</span><span class="font-medium text-zinc-800 dark:text-zinc-100">{{ __('Program') }}</span></div>
             <div>
                 <h1 class="text-2xl font-semibold text-zinc-950 dark:text-white">{{ __('Program') }}</h1>
-                <p class="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{{ __('Galeri foto program Banjar Puluk-Puluk.') }}</p>
+                <p class="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{{ __('Informasi dan kabar terbaru Banjar Puluk-Puluk.') }}</p>
             </div>
         </div>
         @can('program.create')

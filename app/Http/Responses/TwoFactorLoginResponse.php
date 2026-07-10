@@ -4,7 +4,6 @@ namespace App\Http\Responses;
 
 use Illuminate\Http\JsonResponse;
 use Laravel\Fortify\Contracts\TwoFactorLoginResponse as TwoFactorLoginResponseContract;
-use Laravel\Fortify\Fortify;
 use Symfony\Component\HttpFoundation\Response;
 
 class TwoFactorLoginResponse implements TwoFactorLoginResponseContract
@@ -13,6 +12,13 @@ class TwoFactorLoginResponse implements TwoFactorLoginResponseContract
     {
         return $request->wantsJson()
             ? new JsonResponse(['two_factor' => false], 200)
-            : redirect()->intended(Fortify::redirects('login'));
+            : redirect()->intended($this->redirectPath($request));
+    }
+
+    private function redirectPath($request): string
+    {
+        return $request->user()?->hasRole('Masyarakat')
+            ? route('beranda', absolute: false)
+            : route('dashboard', absolute: false);
     }
 }

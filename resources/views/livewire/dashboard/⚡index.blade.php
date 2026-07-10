@@ -7,6 +7,7 @@ use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -50,8 +51,45 @@ new #[Title('Dashboard')] class extends Component
             ->get();
     }
 
+    #[Computed]
+    public function recentProgram()
+    {
+        return ProgramBanjar::query()
+            ->with('user')
+            ->whereIn('status', [ProgramBanjar::STATUS_BERJALAN, ProgramBanjar::STATUS_SELESAI])
+            ->latest('tanggal_mulai')
+            ->limit(6)
+            ->get();
+    }
+
+    #[Computed]
+    public function recentGaleri()
+    {
+        return DokumentasiKegiatan::query()
+            ->where('status', DokumentasiKegiatan::STATUS_PUBLISHED)
+            ->latest('tanggal')
+            ->limit(6)
+            ->get();
+    }
+
+    #[Computed]
+    public function portalItems()
+    {
+        return $this->recentGaleri
+            ->map(fn (DokumentasiKegiatan $item) => [
+                'type' => 'Galeri',
+                'title' => $item->judul,
+                'date' => $item->tanggal->format('d M Y'),
+                'image' => $this->storageUrl($item->fotos[0] ?? $item->foto),
+                'url' => route('dokumentasi.index'),
+            ])
+            ->filter(fn (array $item) => filled($item['image']))
+            ->take(5)
+            ->values();
+    }
+
     /**
-     * @return array{items: array<int, array{label: string, count: int}>, total: int, max: int, points: string, area: string}
+     * @return array{items: array<int, array{label: string, count: int, x: float, y: float}>, total: int, max: int, points: string, area: string}
      */
     #[Computed]
     public function pengaduanTrend(): array
@@ -83,14 +121,23 @@ new #[Title('Dashboard')] class extends Component
         $max = max(1, (int) $items->max('count'));
         $width = 600;
         $height = 160;
-        $gap = $items->count() > 1 ? $width / ($items->count() - 1) : $width;
+        $itemCount = $items->count();
+        $gap = $itemCount > 1 ? $width / ($itemCount - 1) : $width;
+
+        $items = $items
+            ->map(function (array $item, int $index) use ($gap, $height, $itemCount, $max) {
+                $x = $itemCount > 1 ? $index * $gap : 0;
+                $y = $height - (($item['count'] / $max) * ($height - 20)) - 10;
+
+                return [
+                    ...$item,
+                    'x' => $x,
+                    'y' => $y,
+                ];
+            });
 
         $points = $items
-            ->map(fn (array $item, int $index) => sprintf(
-                '%.2f,%.2f',
-                $index * $gap,
-                $height - (($item['count'] / $max) * ($height - 20)) - 10
-            ))
+            ->map(fn (array $item) => sprintf('%.2f,%.2f', $item['x'], $item['y']))
             ->implode(' ');
 
         return [
@@ -106,37 +153,294 @@ new #[Title('Dashboard')] class extends Component
     {
         return Pengaduan::query()->visibleTo(Auth::user());
     }
+
+    private function storageUrl(?string $path): ?string
+    {
+        if (! $path) {
+            return null;
+        }
+
+        return '/storage/'.Str::of($path)->ltrim('/');
+    }
 };
 ?>
 
-<section class="mx-auto flex w-full max-w-7xl flex-col gap-6">
+<section class="mx-auto flex w-full max-w-[1680px] flex-col gap-6">
     @if (auth()->user()->hasRole('Masyarakat'))
-        <div class="flex flex-col gap-2">
-            <div class="flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400">
-                <span>{{ __('Layanan') }}</span>
-                <span>/</span>
-                <span class="font-medium text-zinc-800 dark:text-zinc-100">{{ __('Beranda') }}</span>
+        <div class="overflow-hidden rounded-lg bg-[#34A99D] text-white shadow-sm">
+            <div class="flex flex-col gap-4 px-5 py-4 lg:flex-row lg:items-center lg:justify-between lg:px-8">
+                <a href="{{ route('beranda') }}" wire:navigate class="flex min-w-0 items-center gap-3">
+                    <span class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-white text-[#34A99D] ring-2 ring-white/70">
+                        <x-app-logo-icon class="h-8 w-8" />
+                    </span>
+                    <span class="min-w-0">
+                        <span class="block truncate text-lg font-semibold">{{ __('Banjar Puluk-Puluk') }}</span>
+                        <span class="block truncate text-sm text-white/85">{{ __('Layanan Masyarakat') }}</span>
+                    </span>
+                </a>
+
+                <nav class="flex gap-2 overflow-x-auto text-sm font-medium">
+                    <a href="{{ route('beranda') }}" wire:navigate class="shrink-0 border-b-2 border-white px-2 py-2">{{ __('Beranda') }}</a>
+                    <a href="{{ route('profil-banjar.index') }}" wire:navigate class="shrink-0 border-b-2 border-transparent px-2 py-2 text-white/90 hover:border-white/80">{{ __('Profil Banjar') }}</a>
+                    <a href="{{ route('program.index') }}" wire:navigate class="shrink-0 border-b-2 border-transparent px-2 py-2 text-white/90 hover:border-white/80">{{ __('Program') }}</a>
+                    <a href="{{ route('dokumentasi.index') }}" wire:navigate class="shrink-0 border-b-2 border-transparent px-2 py-2 text-white/90 hover:border-white/80">{{ __('Galeri') }}</a>
+                    <a href="{{ route('pengaduan.index') }}" wire:navigate class="shrink-0 rounded-md bg-teal-600 px-4 py-2 text-white shadow-sm transition hover:bg-teal-700">{{ __('Pengaduan') }}</a>
+                    <flux:dropdown position="bottom" align="end">
+                        <button type="button" class="flex shrink-0 items-center gap-2 rounded-md border border-white/30 px-3 py-2 text-white/90 transition hover:bg-white/10">
+                            <flux:avatar :initials="auth()->user()->initials()" size="xs" />
+                            <span class="hidden sm:inline">{{ auth()->user()->name }}</span>
+                        </button>
+
+                        <flux:menu>
+                            <div class="flex items-center gap-2 px-1 py-1.5 text-start text-sm">
+                                <flux:avatar :name="auth()->user()->name" :initials="auth()->user()->initials()" />
+                                <div class="grid flex-1 text-start text-sm leading-tight">
+                                    <flux:heading class="truncate">{{ auth()->user()->name }}</flux:heading>
+                                    <flux:text class="truncate">{{ auth()->user()->email }}</flux:text>
+                                </div>
+                            </div>
+
+                            <flux:menu.separator />
+
+                            <flux:menu.item :href="route('profile.edit')" icon="cog" wire:navigate>
+                                {{ __('Profil') }}
+                            </flux:menu.item>
+
+                            <form method="POST" action="{{ route('logout') }}" class="w-full">
+                                @csrf
+                                <flux:menu.item as="button" type="submit" icon="arrow-right-start-on-rectangle" class="w-full cursor-pointer">
+                                    {{ __('Keluar') }}
+                                </flux:menu.item>
+                            </form>
+                        </flux:menu>
+                    </flux:dropdown>
+                </nav>
             </div>
 
-            <div class="rounded-lg border border-zinc-200 bg-white p-8 dark:border-zinc-700 dark:bg-zinc-900">
-                <h1 class="text-3xl font-semibold text-zinc-950 dark:text-white">{{ __('Selamat Datang di Banjar Puluk-Puluk') }}</h1>
-                <p class="mt-3 max-w-3xl text-sm leading-6 text-zinc-600 dark:text-zinc-300">
-                    {{ __('Sistem ini disediakan untuk membantu masyarakat melihat program Banjar Puluk-Puluk, melihat dokumentasi, serta menyampaikan pengaduan secara lebih mudah dan tertata.') }}
-                </p>
+            @php($heroImage = $this->portalItems->first()['image'] ?? null)
+
+            <div
+                class="relative min-h-[520px] overflow-hidden bg-[#17645D]"
+                @if ($heroImage)
+                    style="background-image: linear-gradient(rgba(14, 31, 28, .58), rgba(14, 31, 28, .74)), url('{{ $heroImage }}'); background-size: cover; background-position: center;"
+                @endif
+            >
+                <div class="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(45,212,191,.35),transparent_32%),linear-gradient(145deg,rgba(255,255,255,.14)_0_18%,transparent_18%_34%,rgba(255,255,255,.10)_34%_52%,transparent_52%)]"></div>
+                <div class="absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-[#17645D]/80 to-transparent"></div>
+
+                <div class="relative flex min-h-[360px] flex-col items-center justify-center px-6 py-16 text-center">
+                    <h1 class="max-w-4xl text-4xl font-bold leading-tight tracking-normal text-white sm:text-5xl lg:text-6xl">
+                        {{ __('Selamat Datang') }}<br>
+                        {{ __('Website Resmi Banjar Puluk-Puluk') }}
+                    </h1>
+                    <p class="mt-6 max-w-3xl text-base font-semibold leading-7 text-white/90 sm:text-xl">
+                        {{ __('Sumber informasi terbaru, galeri kegiatan, dan layanan pengaduan masyarakat.') }}
+                    </p>
+                </div>
+
+                <div class="relative px-4 pb-8 sm:px-8">
+                    @if ($this->portalItems->isNotEmpty())
+                        <div
+                            x-data="{
+                                timer: null,
+                                start() {
+                                    this.stop();
+                                    this.timer = setInterval(() => this.next(), 3500);
+                                },
+                                stop() {
+                                    if (this.timer) clearInterval(this.timer);
+                                },
+                                next() {
+                                    const track = this.$refs.track;
+                                    const amount = Math.max(280, track.clientWidth * 0.75);
+
+                                    if (track.scrollLeft + amount >= track.scrollWidth - track.clientWidth - 8) {
+                                        track.scrollTo({ left: 0, behavior: 'smooth' });
+                                        return;
+                                    }
+
+                                    track.scrollBy({ left: amount, behavior: 'smooth' });
+                                },
+                                prev() {
+                                    const track = this.$refs.track;
+                                    const amount = Math.max(280, track.clientWidth * 0.75);
+
+                                    if (track.scrollLeft <= 8) {
+                                        track.scrollTo({ left: track.scrollWidth, behavior: 'smooth' });
+                                        return;
+                                    }
+
+                                    track.scrollBy({ left: -amount, behavior: 'smooth' });
+                                },
+                            }"
+                            x-init="start()"
+                            @mouseenter="stop()"
+                            @mouseleave="start()"
+                            class="relative mx-auto w-full max-w-[1440px]"
+                        >
+                            <button type="button" x-on:click="prev()" class="absolute left-2 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-2xl font-semibold text-[#17645D] shadow-md transition hover:bg-white">
+                                &lsaquo;
+                            </button>
+
+                            <div x-ref="track" class="flex gap-4 overflow-x-auto scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                                @foreach ($this->portalItems as $item)
+                                    <div class="w-64 shrink-0 snap-start overflow-hidden rounded-lg border-2 border-white/85 bg-white/10 shadow-lg backdrop-blur sm:w-72 lg:w-80">
+                                        <img src="{{ $item['image'] }}" alt="{{ $item['title'] }}" class="aspect-[4/3] w-full object-cover">
+                                    </div>
+                                @endforeach
+                            </div>
+
+                            <button type="button" x-on:click="next()" class="absolute right-2 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-2xl font-semibold text-[#17645D] shadow-md transition hover:bg-white">
+                                &rsaquo;
+                            </button>
+                        </div>
+                    @else
+                        <div class="mx-auto max-w-xl rounded-lg border border-white/30 bg-white/15 p-5 text-center text-sm text-white/90 backdrop-blur">
+                            {{ __('Belum ada galeri yang dapat ditampilkan.') }}
+                        </div>
+                    @endif
+                </div>
             </div>
         </div>
 
-        <div class="rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900">
-            <h2 class="text-lg font-semibold text-zinc-950 dark:text-white">{{ __('Profil Singkat Banjar Puluk-Puluk') }}</h2>
-            <div class="mt-4 space-y-4 text-sm leading-6 text-zinc-700 dark:text-zinc-200">
-                <p>
-                    {{ __('Banjar Puluk-Puluk merupakan lingkungan masyarakat adat yang menjunjung kebersamaan, gotong royong, dan pelayanan kepada krama banjar. Kehidupan banjar dijalankan melalui koordinasi antara prajuru banjar, Bendesa Adat, dan masyarakat dalam menjaga ketertiban serta keharmonisan lingkungan.') }}
-                </p>
-                <p>
-                    {{ __('Melalui sistem informasi ini, masyarakat dapat mengikuti program banjar, melihat dokumentasi kegiatan, dan menyampaikan pengaduan yang berkaitan dengan kebutuhan lingkungan sekitar. Setiap laporan diharapkan membantu pengurus banjar merespons persoalan masyarakat dengan lebih cepat dan transparan.') }}
+        <div class="space-y-5">
+            <div>
+                <h2 class="text-4xl font-bold tracking-normal text-[#34A99D]">{{ __('Program') }}</h2>
+                <p class="mt-2 text-sm leading-6 text-zinc-700 dark:text-zinc-300">
+                    {{ __('Menyajikan informasi terbaru tentang kegiatan, pengumuman, dan kabar dari Banjar Puluk-Puluk.') }}
                 </p>
             </div>
+
+            @if ($this->recentProgram->isNotEmpty())
+                <div class="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+                    @foreach ($this->recentProgram as $program)
+                        <article class="overflow-hidden rounded-lg bg-white shadow-md ring-1 ring-zinc-200 transition hover:-translate-y-0.5 hover:shadow-lg dark:bg-zinc-900 dark:ring-zinc-700">
+                            <a href="{{ route('program.index') }}" wire:navigate class="block">
+                                @if ($program->gambar)
+                                    <img src="{{ $this->storageUrl($program->gambar) }}" alt="{{ $program->judul }}" class="aspect-[16/9] w-full object-cover">
+                                @else
+                                    <div class="flex aspect-[16/9] w-full items-center justify-center bg-[#EAF8F6] text-sm font-medium text-[#34A99D]">
+                                        {{ __('Program') }}
+                                    </div>
+                                @endif
+                            </a>
+
+                            <div class="relative flex min-h-56 flex-col p-6 pb-16">
+                                <a href="{{ route('program.index') }}" wire:navigate class="block">
+                                    <h3 class="line-clamp-2 text-lg font-semibold leading-7 text-zinc-700 dark:text-zinc-100">{{ $program->judul }}</h3>
+                                </a>
+                                <p class="mt-3 line-clamp-3 text-sm leading-6 text-zinc-900 dark:text-zinc-300">{{ $program->deskripsi }}</p>
+
+                                <div class="mt-auto flex items-end justify-between pt-8">
+                                    <div class="space-y-1 text-xs text-zinc-600 dark:text-zinc-400">
+                                        <p class="font-medium uppercase">{{ $program->user->name ?? __('Admin') }}</p>
+                                        <p>{{ ($program->tanggal_mulai ?? $program->tanggal)->format('d M Y') }}</p>
+                                    </div>
+
+                                    <div class="absolute bottom-0 right-0 rounded-tl-lg bg-[#34A99D] px-4 py-2 text-center text-sm font-bold leading-4 text-white shadow-sm">
+                                        <span class="block">{{ ($program->tanggal_mulai ?? $program->tanggal)->format('d M') }}</span>
+                                        <span class="block">{{ ($program->tanggal_mulai ?? $program->tanggal)->format('Y') }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </article>
+                    @endforeach
+                </div>
+
+                <div class="flex justify-center">
+                    <a href="{{ route('program.index') }}" wire:navigate class="rounded-md bg-[#34A99D] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#2C9086]">
+                        {{ __('Selengkapnya') }}
+                    </a>
+                </div>
+            @else
+                <div class="rounded-lg border border-zinc-200 bg-white p-6 text-sm text-zinc-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
+                    {{ __('Belum ada program yang dapat ditampilkan.') }}
+                </div>
+            @endif
         </div>
+
+        <div class="space-y-5">
+            <div>
+                <h2 class="text-4xl font-bold tracking-normal text-[#34A99D]">{{ __('Galeri') }}</h2>
+                <p class="mt-2 text-sm leading-6 text-zinc-700 dark:text-zinc-300">
+                    {{ __('Kumpulan foto kegiatan dan dokumentasi terbaru Banjar Puluk-Puluk.') }}
+                </p>
+            </div>
+
+            @if ($this->recentGaleri->isNotEmpty())
+                <div class="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+                    @foreach ($this->recentGaleri as $galeri)
+                        <article class="overflow-hidden rounded-lg bg-white shadow-md ring-1 ring-zinc-200 transition hover:-translate-y-0.5 hover:shadow-lg dark:bg-zinc-900 dark:ring-zinc-700">
+                            <a href="{{ route('dokumentasi.index') }}" wire:navigate class="block">
+                                @if (($galeri->fotos[0] ?? $galeri->foto) !== null)
+                                    <img src="{{ $this->storageUrl($galeri->fotos[0] ?? $galeri->foto) }}" alt="{{ $galeri->judul }}" class="aspect-[16/9] w-full object-cover">
+                                @else
+                                    <div class="flex aspect-[16/9] w-full items-center justify-center bg-[#EAF8F6] text-sm font-medium text-[#34A99D]">
+                                        {{ __('Galeri') }}
+                                    </div>
+                                @endif
+                            </a>
+
+                            <div class="relative flex min-h-48 flex-col p-6 pb-16">
+                                <a href="{{ route('dokumentasi.index') }}" wire:navigate class="block">
+                                    <h3 class="line-clamp-2 text-lg font-semibold leading-7 text-zinc-700 dark:text-zinc-100">{{ $galeri->judul }}</h3>
+                                </a>
+                                <p class="mt-3 line-clamp-3 text-sm leading-6 text-zinc-900 dark:text-zinc-300">{{ $galeri->deskripsi }}</p>
+
+                                <div class="mt-auto flex items-end justify-between pt-8">
+                                    <div class="space-y-1 text-xs text-zinc-600 dark:text-zinc-400">
+                                        <p>{{ $galeri->tanggal->format('d M Y') }}</p>
+                                    </div>
+
+                                    <div class="absolute bottom-0 right-0 rounded-tl-lg bg-[#34A99D] px-4 py-2 text-center text-sm font-bold leading-4 text-white shadow-sm">
+                                        <span class="block">{{ $galeri->tanggal->format('d M') }}</span>
+                                        <span class="block">{{ $galeri->tanggal->format('Y') }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </article>
+                    @endforeach
+                </div>
+
+                <div class="flex justify-center">
+                    <a href="{{ route('dokumentasi.index') }}" wire:navigate class="rounded-md bg-[#34A99D] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#2C9086]">
+                        {{ __('Selengkapnya') }}
+                    </a>
+                </div>
+            @else
+                <div class="rounded-lg border border-zinc-200 bg-white p-6 text-sm text-zinc-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
+                    {{ __('Belum ada galeri yang dapat ditampilkan.') }}
+                </div>
+            @endif
+        </div>
+
+        <footer class="overflow-hidden rounded-lg bg-[#17645D] px-6 py-10 text-white shadow-sm lg:px-12">
+            <div class="grid gap-10 lg:grid-cols-2">
+                <div class="space-y-5">
+                    <div class="flex items-center gap-3">
+                        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-white text-[#34A99D] ring-1 ring-white/40">
+                            <x-app-logo-icon class="h-6 w-6" />
+                        </span>
+                        <h2 class="text-base font-semibold uppercase tracking-normal">{{ __('BANJAR PULUK-PULUK') }}</h2>
+                    </div>
+                    <p class="max-w-sm text-sm leading-6 text-white/80">
+                        {{ __('Website resmi Banjar Puluk-Puluk. Media informasi transparan dan pusat layanan pengaduan masyarakat terpadu.') }}
+                    </p>
+                </div>
+
+                <div class="space-y-5">
+                    <div>
+                        <h2 class="text-base font-semibold">{{ __('Hubungi Kami') }}</h2>
+                        <div class="mt-2 h-1 w-24 rounded-full bg-white/80"></div>
+                    </div>
+                    <div class="space-y-3 text-sm leading-6 text-white/80">
+                        <p>{{ __('+62 896-5499-3430') }}</p>
+                        <p>{{ __('layanan.banjarpulukpuluk@gmail.com') }}</p>
+                        <p>{{ __('Banjar Puluk-Puluk, Desa Senganan, Kecamatan Penebel, Kabupaten Tabanan, Provinsi Bali') }}</p>
+                    </div>
+                </div>
+            </div>
+        </footer>
     @else
         <div class="flex flex-col gap-2">
             <div class="flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400">
@@ -177,7 +481,7 @@ new #[Title('Dashboard')] class extends Component
                 <p class="mt-2 text-3xl font-semibold text-zinc-950 dark:text-white">{{ number_format($this->stats['program']) }}</p>
             </div>
             <div class="rounded-lg border border-zinc-200 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-900">
-                <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('Total Dokumentasi') }}</p>
+                <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('Total Galeri') }}</p>
                 <p class="mt-2 text-3xl font-semibold text-zinc-950 dark:text-white">{{ number_format($this->stats['dokumentasi']) }}</p>
             </div>
         </div>
@@ -205,11 +509,7 @@ new #[Title('Dashboard')] class extends Component
                         <polyline points="{{ $this->pengaduanTrend['points'] }}" fill="none" class="stroke-sky-600 dark:stroke-sky-400" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
 
                         @foreach ($this->pengaduanTrend['items'] as $index => $item)
-                            @php
-                                $x = count($this->pengaduanTrend['items']) > 1 ? $index * (600 / (count($this->pengaduanTrend['items']) - 1)) : 0;
-                                $y = 160 - (($item['count'] / $this->pengaduanTrend['max']) * 140) - 10;
-                            @endphp
-                            <circle cx="{{ $x }}" cy="{{ $y }}" r="4" class="fill-white stroke-sky-600 dark:fill-zinc-900 dark:stroke-sky-400" stroke-width="3" />
+                            <circle cx="{{ $item['x'] }}" cy="{{ $item['y'] }}" r="4" class="fill-white stroke-sky-600 dark:fill-zinc-900 dark:stroke-sky-400" stroke-width="3" />
                         @endforeach
                     @endif
                 </svg>

@@ -24,6 +24,10 @@ use Spatie\Permission\Traits\HasRoles;
  * @property string $name
  * @property string $email
  * @property string|null $phone
+ * @property string|null $nik
+ * @property string|null $kk
+ * @property Carbon|null $tanggal_lahir
+ * @property string|null $jenis_kelamin
  * @property Carbon|null $email_verified_at
  * @property string $password
  * @property string|null $two_factor_secret
@@ -42,7 +46,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property-read Collection<int, Membership> $teamMemberships
  * @property-read Collection<int, Team> $teams
  */
-#[Fillable(['name', 'email', 'phone', 'password', 'current_team_id'])]
+#[Fillable(['name', 'email', 'phone', 'nik', 'kk', 'tanggal_lahir', 'jenis_kelamin', 'password', 'current_team_id'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
 class User extends Authenticatable implements PasskeyUser
 {
@@ -61,6 +65,7 @@ class User extends Authenticatable implements PasskeyUser
     {
         return [
             'email_verified_at' => 'datetime',
+            'tanggal_lahir' => 'date',
             'password' => 'hashed',
             'two_factor_confirmed_at' => 'datetime',
         ];

@@ -64,7 +64,7 @@ new #[Title('Buat Pengaduan')] class extends Component
 };
 ?>
 
-<section class="mx-auto flex w-full max-w-3xl flex-col gap-6">
+<section class="mx-auto flex w-full max-w-5xl flex-col gap-6">
     <div class="flex flex-col gap-2">
         <div class="flex items-center gap-2 text-sm text-zinc-500"><a href="{{ route('pengaduan.index') }}" wire:navigate>{{ __('Pengaduan') }}</a><span>/</span><span>{{ __('Buat') }}</span></div>
         <h1 class="text-2xl font-semibold text-zinc-950 dark:text-white">{{ __('Buat Pengaduan') }}</h1>

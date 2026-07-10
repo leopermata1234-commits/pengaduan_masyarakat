@@ -9,6 +9,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('permission:dashboard.view')
         ->name('dashboard');
 
+    Route::livewire('beranda', 'dashboard.index')
+        ->middleware('permission:dashboard.view')
+        ->name('beranda');
+
+    Route::livewire('profil-banjar', 'profil-banjar.index')
+        ->middleware('permission:dashboard.view')
+        ->name('profil-banjar.index');
+
     Route::livewire('users', 'users.index')
         ->middleware('permission:users.view')
         ->name('users.index');
@@ -18,6 +26,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::livewire('users/{user}/edit', 'users.edit')
         ->middleware('permission:users.edit')
         ->name('users.edit');
+
+    Route::livewire('data-masyarakat', 'data-masyarakat.index')
+        ->middleware('permission:data.masyarakat')
+        ->name('data-masyarakat.index');
 
     Route::livewire('roles', 'roles.index')
         ->middleware('permission:role.view')
@@ -66,13 +78,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('permission:program.edit')
         ->name('program.edit');
 
-    Route::livewire('dokumentasi', 'dokumentasi.index')
+    Route::redirect('dokumentasi', 'galeri');
+    Route::redirect('dokumentasi/create', 'galeri/create');
+    Route::redirect('dokumentasi/{dokumentasiKegiatan}/edit', 'galeri/{dokumentasiKegiatan}/edit');
+
+    Route::livewire('galeri', 'dokumentasi.index')
         ->middleware('permission:dokumentasi.view')
         ->name('dokumentasi.index');
-    Route::livewire('dokumentasi/create', 'dokumentasi.create')
+    Route::livewire('galeri/create', 'dokumentasi.create')
         ->middleware('permission:dokumentasi.create')
         ->name('dokumentasi.create');
-    Route::livewire('dokumentasi/{dokumentasiKegiatan}/edit', 'dokumentasi.edit')
+    Route::livewire('galeri/{dokumentasiKegiatan}/edit', 'dokumentasi.edit')
         ->middleware('permission:dokumentasi.edit')
         ->name('dokumentasi.edit');
 });

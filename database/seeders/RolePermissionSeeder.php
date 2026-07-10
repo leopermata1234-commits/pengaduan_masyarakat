@@ -22,6 +22,7 @@ class RolePermissionSeeder extends Seeder
             'users.create',
             'users.edit',
             'users.delete',
+            'data.masyarakat',
             'pengaduan.view',
             'pengaduan.create',
             'pengaduan.edit',
@@ -66,6 +67,7 @@ class RolePermissionSeeder extends Seeder
         $admin->syncPermissions([
             'dashboard.view',
             'users.view',
+            'data.masyarakat',
             'role.view',
             'pengaduan.view',
             'pengaduan.create',
@@ -87,6 +89,7 @@ class RolePermissionSeeder extends Seeder
         $bendesaAdat->syncPermissions([
             'dashboard.view',
             'users.view',
+            'data.masyarakat',
             'pengaduan.view',
             'pengaduan.respond',
             'pengaduan.verify',
