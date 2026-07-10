@@ -32,7 +32,7 @@ new #[Title('Galeri')] class extends Component
     {
         return DokumentasiKegiatan::query()
             ->with('user')
-            ->when(auth()->user()->hasRole('Masyarakat'), fn (Builder $query) => $query->where('status', DokumentasiKegiatan::STATUS_PUBLISHED))
+            ->when(! auth()->check() || auth()->user()->hasRole('Masyarakat'), fn (Builder $query) => $query->where('status', DokumentasiKegiatan::STATUS_PUBLISHED))
             ->when($this->search !== '', fn (Builder $query) => $query
                 ->where(fn (Builder $query) => $query
                     ->where('judul', 'like', "%{$this->search}%")
@@ -92,7 +92,7 @@ new #[Title('Galeri')] class extends Component
 };
 ?>
 
-<section class="mx-auto flex w-full max-w-[1680px] flex-col gap-6">
+<section class="flex w-full flex-col gap-6">
     <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div class="flex flex-col gap-2">
             <div class="flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400"><span>{{ __('Layanan') }}</span><span>/</span><span class="font-medium text-zinc-800 dark:text-zinc-100">{{ __('Galeri') }}</span></div>

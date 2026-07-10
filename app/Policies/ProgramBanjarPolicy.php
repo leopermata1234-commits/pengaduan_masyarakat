@@ -12,8 +12,12 @@ class ProgramBanjarPolicy
         return $user->can('program.view');
     }
 
-    public function view(User $user, ProgramBanjar $programBanjar): bool
+    public function view(?User $user, ProgramBanjar $programBanjar): bool
     {
+        if (! $user) {
+            return in_array($programBanjar->status, [ProgramBanjar::STATUS_BERJALAN, ProgramBanjar::STATUS_SELESAI], true);
+        }
+
         if (! $user->can('program.view')) {
             return false;
         }

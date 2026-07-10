@@ -2,20 +2,19 @@
 
 use Illuminate\Support\Facades\Route;
 
-Route::view('/', 'welcome')->name('home');
+Route::redirect('/', '/beranda')->name('home');
+
+Route::livewire('beranda', 'dashboard.index')->name('beranda');
+Route::livewire('profil-banjar', 'profil-banjar.index')->name('profil-banjar.index');
+Route::livewire('program', 'program.index')->name('program.index');
+Route::livewire('galeri', 'dokumentasi.index')->name('dokumentasi.index');
+Route::redirect('dokumentasi', 'galeri');
+Route::redirect('informasi-kegiatan', 'program');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::livewire('dashboard', 'dashboard.index')
         ->middleware('permission:dashboard.view')
         ->name('dashboard');
-
-    Route::livewire('beranda', 'dashboard.index')
-        ->middleware('permission:dashboard.view')
-        ->name('beranda');
-
-    Route::livewire('profil-banjar', 'profil-banjar.index')
-        ->middleware('permission:dashboard.view')
-        ->name('profil-banjar.index');
 
     Route::livewire('users', 'users.index')
         ->middleware('permission:users.view')
@@ -64,13 +63,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('permission:pengaduan.edit')
         ->name('pengaduan.edit');
 
-    Route::redirect('informasi-kegiatan', 'program');
     Route::redirect('informasi-kegiatan/create', 'program/create');
     Route::redirect('informasi-kegiatan/{programBanjar}/edit', 'program/{programBanjar}/edit');
 
-    Route::livewire('program', 'program.index')
-        ->middleware('permission:program.view')
-        ->name('program.index');
     Route::livewire('program/create', 'program.create')
         ->middleware('permission:program.create')
         ->name('program.create');
@@ -78,13 +73,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('permission:program.edit')
         ->name('program.edit');
 
-    Route::redirect('dokumentasi', 'galeri');
     Route::redirect('dokumentasi/create', 'galeri/create');
     Route::redirect('dokumentasi/{dokumentasiKegiatan}/edit', 'galeri/{dokumentasiKegiatan}/edit');
 
-    Route::livewire('galeri', 'dokumentasi.index')
-        ->middleware('permission:dokumentasi.view')
-        ->name('dokumentasi.index');
     Route::livewire('galeri/create', 'dokumentasi.create')
         ->middleware('permission:dokumentasi.create')
         ->name('dokumentasi.create');

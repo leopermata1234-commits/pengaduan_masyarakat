@@ -165,10 +165,10 @@ new #[Title('Dashboard')] class extends Component
 };
 ?>
 
-<section class="mx-auto flex w-full max-w-[1680px] flex-col gap-6">
-    @if (auth()->user()->hasRole('Masyarakat'))
-        <div class="overflow-hidden rounded-lg bg-[#34A99D] text-white shadow-sm">
-            <div class="flex flex-col gap-4 px-5 py-4 lg:flex-row lg:items-center lg:justify-between lg:px-8">
+<section class="flex w-full flex-col gap-6">
+    @if (! auth()->check() || auth()->user()->hasRole('Masyarakat'))
+        <div class="overflow-hidden bg-[#34A99D] text-white shadow-sm">
+            <div class="flex w-full flex-col gap-4 px-5 py-4 lg:flex-row lg:items-center lg:justify-between lg:px-8">
                 <a href="{{ route('beranda') }}" wire:navigate class="flex min-w-0 items-center gap-3">
                     <span class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-white text-[#34A99D] ring-2 ring-white/70">
                         <x-app-logo-icon class="h-8 w-8" />
@@ -184,7 +184,8 @@ new #[Title('Dashboard')] class extends Component
                     <a href="{{ route('profil-banjar.index') }}" wire:navigate class="shrink-0 border-b-2 border-transparent px-2 py-2 text-white/90 hover:border-white/80">{{ __('Profil Banjar') }}</a>
                     <a href="{{ route('program.index') }}" wire:navigate class="shrink-0 border-b-2 border-transparent px-2 py-2 text-white/90 hover:border-white/80">{{ __('Program') }}</a>
                     <a href="{{ route('dokumentasi.index') }}" wire:navigate class="shrink-0 border-b-2 border-transparent px-2 py-2 text-white/90 hover:border-white/80">{{ __('Galeri') }}</a>
-                    <a href="{{ route('pengaduan.index') }}" wire:navigate class="shrink-0 rounded-md bg-teal-600 px-4 py-2 text-white shadow-sm transition hover:bg-teal-700">{{ __('Pengaduan') }}</a>
+                    <a href="{{ route('pengaduan.index') }}" class="shrink-0 rounded-md bg-teal-600 px-4 py-2 text-white shadow-sm transition hover:bg-teal-700">{{ __('Pengaduan') }}</a>
+                    @auth
                     <flux:dropdown position="bottom" align="end">
                         <button type="button" class="flex shrink-0 items-center gap-2 rounded-md border border-white/30 px-3 py-2 text-white/90 transition hover:bg-white/10">
                             <flux:avatar :initials="auth()->user()->initials()" size="xs" />
@@ -214,6 +215,11 @@ new #[Title('Dashboard')] class extends Component
                             </form>
                         </flux:menu>
                     </flux:dropdown>
+                    @else
+                        <a href="{{ route('login') }}" class="shrink-0 rounded-md border border-white/40 px-4 py-2 text-white transition hover:bg-white/10">
+                            {{ __('Masuk') }}
+                        </a>
+                    @endauth
                 </nav>
             </div>
 
@@ -238,54 +244,105 @@ new #[Title('Dashboard')] class extends Component
                     </p>
                 </div>
 
-                <div class="relative px-4 pb-8 sm:px-8">
+                <div class="relative pb-8">
                     @if ($this->portalItems->isNotEmpty())
                         <div
                             x-data="{
                                 timer: null,
+                                resumeTimer: null,
+                                dragging: false,
+                                dragStartX: 0,
+                                dragStartScroll: 0,
                                 start() {
                                     this.stop();
-                                    this.timer = setInterval(() => this.next(), 3500);
+                                    this.timer = setInterval(() => this.advance(1), 2000);
                                 },
                                 stop() {
                                     if (this.timer) clearInterval(this.timer);
+                                    if (this.resumeTimer) clearTimeout(this.resumeTimer);
+                                    this.timer = null;
+                                    this.resumeTimer = null;
                                 },
-                                next() {
+                                advance(direction) {
                                     const track = this.$refs.track;
-                                    const amount = Math.max(280, track.clientWidth * 0.75);
+                                    const card = track.querySelector('[data-carousel-card]');
+                                    const amount = card ? card.getBoundingClientRect().width + 16 : 320;
+                                    const maxScroll = track.scrollWidth - track.clientWidth;
 
-                                    if (track.scrollLeft + amount >= track.scrollWidth - track.clientWidth - 8) {
+                                    if (maxScroll <= 1) return;
+
+                                    if (direction > 0 && track.scrollLeft >= maxScroll - 8) {
                                         track.scrollTo({ left: 0, behavior: 'smooth' });
                                         return;
                                     }
 
-                                    track.scrollBy({ left: amount, behavior: 'smooth' });
-                                },
-                                prev() {
-                                    const track = this.$refs.track;
-                                    const amount = Math.max(280, track.clientWidth * 0.75);
-
-                                    if (track.scrollLeft <= 8) {
-                                        track.scrollTo({ left: track.scrollWidth, behavior: 'smooth' });
+                                    if (direction < 0 && track.scrollLeft <= 8) {
+                                        track.scrollTo({ left: maxScroll, behavior: 'smooth' });
                                         return;
                                     }
 
-                                    track.scrollBy({ left: -amount, behavior: 'smooth' });
+                                    track.scrollTo({
+                                        left: direction > 0
+                                            ? Math.min(track.scrollLeft + amount, maxScroll)
+                                            : Math.max(track.scrollLeft - amount, 0),
+                                        behavior: 'smooth',
+                                    });
+                                },
+                                move(direction) {
+                                    this.stop();
+                                    this.advance(direction);
+
+                                    this.resumeTimer = setTimeout(() => this.start(), 650);
+                                },
+                                next() {
+                                    this.move(1);
+                                },
+                                prev() {
+                                    this.move(-1);
+                                },
+                                beginDrag(event) {
+                                    this.stop();
+                                    this.dragging = true;
+                                    this.dragStartX = event.clientX;
+                                    this.dragStartScroll = this.$refs.track.scrollLeft;
+                                    this.$refs.track.setPointerCapture(event.pointerId);
+                                },
+                                drag(event) {
+                                    if (! this.dragging) return;
+
+                                    event.preventDefault();
+                                    this.$refs.track.scrollLeft = this.dragStartScroll - (event.clientX - this.dragStartX);
+                                },
+                                endDrag(event) {
+                                    if (! this.dragging) return;
+
+                                    this.dragging = false;
+                                    if (this.$refs.track.hasPointerCapture(event.pointerId)) {
+                                        this.$refs.track.releasePointerCapture(event.pointerId);
+                                    }
+                                    this.start();
                                 },
                             }"
-                            x-init="start()"
-                            @mouseenter="stop()"
-                            @mouseleave="start()"
-                            class="relative mx-auto w-full max-w-[1440px]"
+                            x-init="$nextTick(() => start())"
+                            class="relative mx-auto w-full max-w-6xl px-6 lg:px-8"
                         >
                             <button type="button" x-on:click="prev()" class="absolute left-2 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-2xl font-semibold text-[#17645D] shadow-md transition hover:bg-white">
                                 &lsaquo;
                             </button>
 
-                            <div x-ref="track" class="flex gap-4 overflow-x-auto scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                            <div
+                                x-ref="track"
+                                x-on:pointerdown="beginDrag($event)"
+                                x-on:pointermove="drag($event)"
+                                x-on:pointerup="endDrag($event)"
+                                x-on:pointercancel="endDrag($event)"
+                                x-on:dragstart.prevent
+                                :class="dragging ? 'cursor-grabbing' : 'cursor-grab'"
+                                class="flex touch-pan-y select-none overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                            >
                                 @foreach ($this->portalItems as $item)
-                                    <div class="w-64 shrink-0 snap-start overflow-hidden rounded-lg border-2 border-white/85 bg-white/10 shadow-lg backdrop-blur sm:w-72 lg:w-80">
-                                        <img src="{{ $item['image'] }}" alt="{{ $item['title'] }}" class="aspect-[4/3] w-full object-cover">
+                                    <div data-carousel-card class="mr-4 w-64 shrink-0 overflow-hidden rounded-lg border-2 border-white/85 bg-white/10 shadow-lg backdrop-blur last:mr-0 sm:w-72 lg:w-80">
+                                        <img src="{{ $item['image'] }}" alt="{{ $item['title'] }}" draggable="false" class="pointer-events-none aspect-[4/3] w-full object-cover">
                                     </div>
                                 @endforeach
                             </div>
@@ -303,7 +360,7 @@ new #[Title('Dashboard')] class extends Component
             </div>
         </div>
 
-        <div class="space-y-5">
+        <div class="mx-auto w-full max-w-6xl space-y-5 px-6 lg:px-8">
             <div>
                 <h2 class="text-4xl font-bold tracking-normal text-[#34A99D]">{{ __('Program') }}</h2>
                 <p class="mt-2 text-sm leading-6 text-zinc-700 dark:text-zinc-300">
@@ -359,7 +416,7 @@ new #[Title('Dashboard')] class extends Component
             @endif
         </div>
 
-        <div class="space-y-5">
+        <div class="mx-auto w-full max-w-6xl space-y-5 px-6 lg:px-8">
             <div>
                 <h2 class="text-4xl font-bold tracking-normal text-[#34A99D]">{{ __('Galeri') }}</h2>
                 <p class="mt-2 text-sm leading-6 text-zinc-700 dark:text-zinc-300">
@@ -414,33 +471,7 @@ new #[Title('Dashboard')] class extends Component
             @endif
         </div>
 
-        <footer class="overflow-hidden rounded-lg bg-[#17645D] px-6 py-10 text-white shadow-sm lg:px-12">
-            <div class="grid gap-10 lg:grid-cols-2">
-                <div class="space-y-5">
-                    <div class="flex items-center gap-3">
-                        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-white text-[#34A99D] ring-1 ring-white/40">
-                            <x-app-logo-icon class="h-6 w-6" />
-                        </span>
-                        <h2 class="text-base font-semibold uppercase tracking-normal">{{ __('BANJAR PULUK-PULUK') }}</h2>
-                    </div>
-                    <p class="max-w-sm text-sm leading-6 text-white/80">
-                        {{ __('Website resmi Banjar Puluk-Puluk. Media informasi transparan dan pusat layanan pengaduan masyarakat terpadu.') }}
-                    </p>
-                </div>
-
-                <div class="space-y-5">
-                    <div>
-                        <h2 class="text-base font-semibold">{{ __('Hubungi Kami') }}</h2>
-                        <div class="mt-2 h-1 w-24 rounded-full bg-white/80"></div>
-                    </div>
-                    <div class="space-y-3 text-sm leading-6 text-white/80">
-                        <p>{{ __('+62 896-5499-3430') }}</p>
-                        <p>{{ __('layanan.banjarpulukpuluk@gmail.com') }}</p>
-                        <p>{{ __('Banjar Puluk-Puluk, Desa Senganan, Kecamatan Penebel, Kabupaten Tabanan, Provinsi Bali') }}</p>
-                    </div>
-                </div>
-            </div>
-        </footer>
+        <x-portal-footer />
     @else
         <div class="flex flex-col gap-2">
             <div class="flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400">

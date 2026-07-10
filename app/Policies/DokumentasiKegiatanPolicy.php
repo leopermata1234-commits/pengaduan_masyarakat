@@ -12,8 +12,12 @@ class DokumentasiKegiatanPolicy
         return $user->can('dokumentasi.view');
     }
 
-    public function view(User $user, DokumentasiKegiatan $dokumentasiKegiatan): bool
+    public function view(?User $user, DokumentasiKegiatan $dokumentasiKegiatan): bool
     {
+        if (! $user) {
+            return $dokumentasiKegiatan->status === DokumentasiKegiatan::STATUS_PUBLISHED;
+        }
+
         if (! $user->can('dokumentasi.view')) {
             return false;
         }

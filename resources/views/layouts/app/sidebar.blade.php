@@ -3,8 +3,8 @@
     <head>
         @include('partials.head')
     </head>
-    <body class="min-h-screen bg-white dark:bg-zinc-800">
-        @unless (auth()->user()->hasRole('Masyarakat'))
+    <body class="min-h-screen {{ (! auth()->check() || auth()->user()->hasRole('Masyarakat')) && request()->routeIs('beranda', 'profil-banjar.*', 'program.*', 'dokumentasi.*', 'pengaduan.*') ? 'bg-[#F4FAF9]' : 'bg-white' }} dark:bg-zinc-800">
+        @if (auth()->check() && ! auth()->user()->hasRole('Masyarakat'))
             <flux:sidebar sticky collapsible="mobile" class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
                 <flux:sidebar.header>
                     <div class="flex w-full items-center gap-2">
@@ -131,11 +131,13 @@
                     </flux:menu>
                 </flux:dropdown>
             </flux:header>
-        @endunless
+        @endif
 
         {{ $slot }}
 
-        <livewire:create-team-modal />
+        @auth
+            <livewire:create-team-modal />
+        @endauth
 
         @persist('toast')
             <flux:toast.group>
