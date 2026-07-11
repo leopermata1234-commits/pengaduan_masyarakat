@@ -93,13 +93,14 @@ new #[Title('Detail Pengaduan')] class extends Component
 
         $this->pengaduan->update(['status' => $validated['status']]);
 
-        if (filled($validated['isi_tanggapan']) || $fotoTanggapan) {
+        if (filled($validated['isi_tanggapan']) || $fotoTanggapan || $this->pengaduan->wasChanged('status')) {
             TanggapanPengaduan::create([
                 'pengaduan_id' => $this->pengaduan->id,
                 'admin_id' => auth()->id(),
                 'isi_tanggapan' => filled($validated['isi_tanggapan'])
                     ? $validated['isi_tanggapan']
-                    : __('Pengaduan selesai ditangani. Foto bukti penyelesaian telah dilampirkan.'),
+                    : __('Status pengaduan diperbarui menjadi :status.', ['status' => $validated['status']]),
+                'status' => $validated['status'],
                 'foto' => $fotoTanggapan,
             ]);
         }
@@ -145,6 +146,7 @@ new #[Title('Detail Pengaduan')] class extends Component
                 'isi_tanggapan' => __('Pengaduan ditolak. Alasan: :alasan', [
                     'alasan' => $validated['alasan_penolakan'],
                 ]),
+                'status' => $validated['status'],
             ]);
         }
 
@@ -153,6 +155,7 @@ new #[Title('Detail Pengaduan')] class extends Component
                 'pengaduan_id' => $this->pengaduan->id,
                 'admin_id' => auth()->id(),
                 'isi_tanggapan' => __('Pengaduan selesai ditangani. Foto bukti penyelesaian telah dilampirkan.'),
+                'status' => $validated['status'],
                 'foto' => $fotoStatus,
             ]);
         }
@@ -179,6 +182,9 @@ new #[Title('Detail Pengaduan')] class extends Component
             'pengaduan_id' => $this->pengaduan->id,
             'admin_id' => auth()->id(),
             'isi_tanggapan' => $validated['isi_tanggapan'],
+            'status' => $this->pengaduan->status === Pengaduan::STATUS_PENDING
+                ? Pengaduan::STATUS_DIPROSES
+                : $this->pengaduan->status,
             'foto' => $this->foto_tanggapan?->store('tanggapan-pengaduan', 'public'),
         ]);
 
@@ -212,64 +218,85 @@ new #[Title('Detail Pengaduan')] class extends Component
             report($e);
         }
     }
+
+    private function statusBannerClasses(): string
+    {
+        return match ($this->pengaduan->status) {
+            Pengaduan::STATUS_SELESAI => 'from-emerald-700 to-emerald-600',
+            Pengaduan::STATUS_DIPROSES => 'from-sky-700 to-sky-600',
+            Pengaduan::STATUS_DITOLAK => 'from-red-700 to-red-600',
+            default => 'from-amber-600 to-amber-500',
+        };
+    }
+
+    private function tanggapanStatusClasses(?string $status): string
+    {
+        return match ($status) {
+            Pengaduan::STATUS_SELESAI => 'bg-emerald-100 text-emerald-800 ring-emerald-600/20',
+            Pengaduan::STATUS_DIPROSES => 'bg-sky-100 text-sky-800 ring-sky-600/20',
+            Pengaduan::STATUS_DITOLAK => 'bg-red-100 text-red-800 ring-red-600/20',
+            default => 'bg-amber-100 text-amber-800 ring-amber-600/20',
+        };
+    }
 };
 ?>
 
-<section class="mx-auto w-full max-w-6xl overflow-hidden rounded-2xl border border-[#dfd4c6] bg-white text-[#332920] shadow-[0_12px_30px_rgba(62,44,29,.12)]">
-    <div class="flex items-center justify-between gap-4 bg-[linear-gradient(135deg,#116d68,#17827a)] px-5 py-4 text-white">
-        <div class="flex min-w-0 items-center gap-3">
-            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/20 text-white ring-1 ring-white/30">
-                <flux:icon name="user" class="size-5" />
+<section class="mx-auto w-full max-w-5xl overflow-hidden rounded-2xl border border-[#dfd4c6] bg-white text-[#332920] shadow-[0_14px_36px_rgba(62,44,29,.13)]">
+    <div class="bg-gradient-to-r {{ $this->statusBannerClasses() }} px-5 py-4 text-white sm:px-7">
+        <div class="flex items-start justify-between gap-5">
+            <div>
+                <p class="text-base font-extrabold uppercase tracking-wide sm:text-lg">{{ __('Status Pengaduan: :status', ['status' => $pengaduan->status]) }}</p>
+                <p class="mt-1 text-xs text-white/85 sm:text-sm">
+                    {{ __('Diajukan oleh :nama', ['nama' => $pengaduan->user->name]) }}
+                    <span aria-hidden="true">&middot;</span>
+                    {{ $pengaduan->created_at->format('d M Y H:i') }}
+                </p>
             </div>
-            <div class="min-w-0">
-                <p class="truncate text-base font-bold">{{ $pengaduan->user->name }}</p>
-                <span class="inline-flex rounded bg-white/15 px-2 py-0.5 text-xs font-semibold text-white/90">
-                    {{ $pengaduan->created_at->format('d M Y') }}
-                </span>
-            </div>
+            <a href="{{ route('pengaduan.index') }}" wire:navigate class="shrink-0 rounded-lg bg-white/15 px-4 py-2 text-xs font-semibold text-white ring-1 ring-white/25 transition hover:bg-white/25">
+                {{ __('Kembali') }}
+            </a>
         </div>
-
-        <a href="{{ route('pengaduan.index') }}" wire:navigate class="rounded-lg bg-white/15 px-4 py-2 text-center text-xs font-semibold text-white ring-1 ring-white/25 transition hover:bg-white/25">
-            {{ __('Kembali') }}
-        </a>
     </div>
 
-    <div class="space-y-5 px-4 py-6">
-        <div class="max-w-3xl">
-            <h1 class="font-serif text-3xl font-bold leading-9 text-[#2f241b]">{{ $pengaduan->judul }}</h1>
-            <p class="mt-3 whitespace-pre-line text-sm leading-6 text-zinc-800 dark:text-zinc-200">{{ $pengaduan->isi_pengaduan }}</p>
+    <div class="space-y-7 px-5 py-7 sm:px-7">
+        <div class="border-b border-[#e8ddd0] pb-6">
+            <h1 class="font-serif text-3xl font-bold leading-tight text-[#2f241b] sm:text-4xl">{{ $pengaduan->judul }}</h1>
+            <div class="mt-5">
+                <h2 class="text-base font-extrabold text-[#3b3027]">{{ __('Deskripsi Masalah') }}</h2>
+                <p class="mt-2 whitespace-pre-line text-sm leading-7 text-[#5f574f]">{{ $pengaduan->isi_pengaduan }}</p>
+            </div>
         </div>
 
         <div class="space-y-3">
-            <p class="text-sm font-bold">{{ __('Foto Pengaduan') }}</p>
+            <div>
+                <h2 class="text-base font-extrabold text-[#3b3027]">{{ __('Foto Pengaduan') }}</h2>
+                <p class="mt-1 text-xs text-[#81776e]">{{ __('Dokumen dan foto pendukung dari masyarakat.') }}</p>
+            </div>
             @if ($this->fotoPaths())
-                <div class="grid max-w-3xl gap-4 sm:grid-cols-3">
+                <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     @foreach ($this->fotoPaths() as $index => $foto)
-                        <button type="button" wire:click="openFotoPreview('{{ addslashes($foto) }}', '{{ addslashes($pengaduan->judul.' '.($index + 1)) }}')" class="block w-full overflow-hidden rounded-lg bg-zinc-300 text-left dark:bg-zinc-800">
+                        <button type="button" wire:click="openFotoPreview('{{ addslashes($foto) }}', '{{ addslashes($pengaduan->judul.' '.($index + 1)) }}')" class="group block w-full overflow-hidden rounded-xl border border-[#dfd4c6] bg-[#f5efe6] text-left shadow-sm">
                             <img
                                 src="{{ $this->fotoUrl($foto) }}"
                                 alt="{{ $pengaduan->judul }} {{ $index + 1 }}"
-                                class="aspect-square w-full object-cover"
+                                class="aspect-video w-full object-cover transition duration-300 group-hover:scale-[1.03]"
                             >
+                            <span class="block px-3 py-2 text-center text-xs font-semibold text-[#655b52]">{{ __('Lampiran :nomor', ['nomor' => $index + 1]) }}</span>
                         </button>
                     @endforeach
                 </div>
             @else
-                <div class="grid max-w-3xl gap-4 sm:grid-cols-3">
-                    @for ($index = 0; $index < 3; $index++)
-                        <div class="flex aspect-square items-center justify-center rounded-lg bg-zinc-300 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-500">
-                            <flux:icon name="photo" class="size-16" />
-                        </div>
-                    @endfor
+                <div class="flex min-h-40 items-center justify-center rounded-xl border border-dashed border-[#cbbba9] bg-[#fffaf2] text-sm text-[#81776e]">
+                    {{ __('Tidak ada foto pendukung.') }}
                 </div>
             @endif
         </div>
     </div>
 
     @can('pengaduan.verify')
-        <form wire:submit="saveTindakan" class="border-t-8 border-zinc-100 bg-zinc-200 dark:border-zinc-950 dark:bg-zinc-900">
-            <div class="flex items-center gap-3 bg-zinc-300 px-4 py-3 dark:bg-zinc-800">
-                <h2 class="font-bold">{{ __('Tindakan') }}</h2>
+        <form wire:submit="saveTindakan" class="border-t-8 border-[#f7f2ea] bg-[#fffaf4]">
+            <div class="flex items-center gap-3 border-b border-[#dfd4c6] bg-[#efe4d5] px-6 py-4">
+                <h2 class="font-extrabold text-[#3b3027]">{{ __('Tindakan Petugas') }}</h2>
             </div>
 
             <div class="space-y-5 px-4 py-5">
@@ -277,7 +304,7 @@ new #[Title('Detail Pengaduan')] class extends Component
                     <p class="mb-2 text-sm font-bold">{{ __('Status Saat Ini') }}</p>
                     <div class="grid gap-3 md:grid-cols-3">
                         @foreach ($this->actionStatuses() as $statusValue => $statusLabel)
-                            <label class="flex cursor-pointer items-center gap-2 rounded-lg bg-zinc-100 px-4 py-3 text-sm font-bold text-zinc-800 ring-1 ring-transparent transition has-[:checked]:bg-white has-[:checked]:ring-zinc-500 dark:bg-zinc-800 dark:text-zinc-100 dark:has-[:checked]:bg-zinc-700">
+                            <label class="flex cursor-pointer items-center gap-2 rounded-xl bg-white px-4 py-3 text-sm font-bold text-[#554b42] ring-1 ring-[#dfd4c6] transition has-[:checked]:bg-[#eaf7f4] has-[:checked]:text-[#13746e] has-[:checked]:ring-[#13746e]">
                                 <input type="radio" wire:model.live="status" value="{{ $statusValue }}" class="size-3 border-zinc-400 text-zinc-700 focus:ring-zinc-500">
                                 <span>{{ $statusLabel }}</span>
                             </label>
@@ -315,7 +342,7 @@ new #[Title('Detail Pengaduan')] class extends Component
                 </div>
 
                 <div class="flex justify-end">
-                    <button type="submit" class="rounded-lg bg-zinc-300 px-5 py-3 text-sm font-bold text-zinc-950 transition hover:bg-zinc-400 dark:bg-zinc-700 dark:text-white dark:hover:bg-zinc-600">
+                    <button type="submit" class="rounded-xl bg-[#13746e] px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-[#0f625d]">
                         {{ __('Simpan Tanggapan') }}
                     </button>
                 </div>
@@ -324,18 +351,33 @@ new #[Title('Detail Pengaduan')] class extends Component
     @endcan
 
     @if ($pengaduan->tanggapan->isNotEmpty())
-        <div class="border-t border-zinc-300 bg-zinc-100 px-4 py-5 dark:border-zinc-800 dark:bg-zinc-950">
-            <h2 class="font-bold">{{ __('Riwayat Tanggapan') }}</h2>
-            <div class="mt-3 space-y-3">
+        <div class="border-t-8 border-[#f7f2ea] bg-[#fbf8f3] px-5 py-7 sm:px-7">
+            <h2 class="text-base font-extrabold uppercase tracking-wide text-[#3b3027]">{{ __('Riwayat Tanggapan & Penyelesaian') }}</h2>
+            <div class="relative mt-6 space-y-5 before:absolute before:bottom-5 before:left-5 before:top-5 before:w-px before:bg-[#c9d7d4]">
                 @foreach ($pengaduan->tanggapan as $tanggapan)
-                    <div class="rounded-lg bg-white p-4 text-sm shadow-sm dark:bg-zinc-900">
-                        <p class="font-semibold text-zinc-600 dark:text-zinc-400">{{ $tanggapan->admin?->name ?? __('Admin') }} &middot; {{ $tanggapan->created_at->format('d M Y H:i') }}</p>
-                        <p class="mt-2 whitespace-pre-line text-zinc-800 dark:text-zinc-100">{{ $tanggapan->isi_tanggapan }}</p>
-                        @if ($tanggapan->foto)
-                            <button type="button" wire:click="openFotoPreview('{{ addslashes($tanggapan->foto) }}', '{{ __('Foto tanggapan') }}')" class="mt-3 block max-w-sm overflow-hidden rounded-lg text-left">
-                                <img src="{{ $this->fotoUrl($tanggapan->foto) }}" alt="{{ __('Foto tanggapan') }}" class="aspect-video w-full rounded-lg object-cover">
-                            </button>
-                        @endif
+                    <div class="relative flex gap-4">
+                        <div class="z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#13746e] text-white shadow-sm ring-4 ring-[#fbf8f3]">
+                            <flux:icon name="user" class="size-5" />
+                        </div>
+                        <div class="min-w-0 flex-1 rounded-xl border border-[#dfd4c6] bg-white p-4 text-sm shadow-sm">
+                            <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                                <p class="font-bold text-[#3b3027]">{{ $tanggapan->admin?->name ?? __('Admin Banjar') }} <span class="font-medium text-[#81776e]">&middot; {{ $tanggapan->created_at->format('d M Y H:i') }}</span></p>
+                                @if ($tanggapan->status)
+                                    <span class="inline-flex w-fit shrink-0 rounded-full px-2.5 py-1 text-[11px] font-extrabold uppercase ring-1 ring-inset {{ $this->tanggapanStatusClasses($tanggapan->status) }}">
+                                        {{ $tanggapan->status }}
+                                    </span>
+                                @endif
+                            </div>
+                            <p class="mt-2 whitespace-pre-line leading-6 text-[#5f574f]">{{ $tanggapan->isi_tanggapan }}</p>
+                            @if ($tanggapan->foto)
+                                <div class="mt-4 rounded-xl border border-[#e8ddd0] bg-[#fffaf2] p-3">
+                                    <p class="mb-2 text-xs font-extrabold uppercase tracking-wide text-[#655b52]">{{ __('Dokumen Hasil Penanganan') }}</p>
+                                    <button type="button" wire:click="openFotoPreview('{{ addslashes($tanggapan->foto) }}', '{{ __('Foto tanggapan') }}')" class="block max-w-sm overflow-hidden rounded-lg text-left">
+                                        <img src="{{ $this->fotoUrl($tanggapan->foto) }}" alt="{{ __('Foto tanggapan') }}" class="aspect-video w-full rounded-lg object-cover">
+                                    </button>
+                                </div>
+                            @endif
+                        </div>
                     </div>
                 @endforeach
             </div>
