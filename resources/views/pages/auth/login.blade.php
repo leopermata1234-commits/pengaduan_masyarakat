@@ -12,26 +12,8 @@
             </div>
 
             <div class="mx-auto w-full max-w-6xl">
-                <nav class="mb-5 flex items-center justify-between lg:mb-7" aria-label="Navigasi autentikasi">
-                    <a href="{{ route('home') }}" class="inline-flex items-center gap-3 text-white" wire:navigate>
-                        <span class="flex size-10 items-center justify-center rounded-xl bg-teal-500/15 ring-1 ring-white/15">
-                            <x-app-logo-icon class="size-6 text-teal-300" />
-                        </span>
-                        <span class="hidden text-sm font-semibold tracking-wide sm:block">Portal Pengaduan Masyarakat</span>
-                    </a>
-
-                    <div class="flex items-center gap-2.5 sm:gap-3">
-                        <a href="{{ route('login') }}" aria-current="page" class="rounded-lg border border-white/55 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-white/10 sm:px-7">
-                            Masuk
-                        </a>
-                        <a href="{{ $teamInvitation ? route('register', ['invitation' => $teamInvitation['code']]) : route('register') }}" class="rounded-lg bg-teal-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-teal-950/20 transition hover:bg-teal-500 sm:px-7" wire:navigate>
-                            Daftar
-                        </a>
-                    </div>
-                </nav>
-
                 <section class="grid overflow-hidden rounded-[1.35rem] bg-white shadow-[0_28px_80px_rgba(2,8,23,0.38)] lg:grid-cols-2">
-                    <div class="px-6 py-8 sm:px-10 sm:py-10 lg:px-14 lg:py-12">
+                    <div class="px-6 py-8 sm:px-10 sm:py-10 lg:order-2 lg:px-14 lg:py-12">
                         <div class="mb-7 flex flex-col items-center text-center">
                             <div class="mb-3 flex items-center gap-3">
                                 <span class="flex size-14 items-center justify-center rounded-2xl bg-gradient-to-br from-teal-500 to-teal-700 text-white shadow-lg shadow-teal-700/20">
@@ -98,7 +80,7 @@
                         </p>
                     </div>
 
-                    <aside class="relative hidden min-h-full overflow-hidden bg-gradient-to-br from-[#16404a] via-[#16545a] to-[#168477] px-12 py-14 text-white lg:flex lg:flex-col lg:justify-center">
+                    <aside class="relative hidden min-h-full overflow-hidden bg-gradient-to-br from-[#16404a] via-[#16545a] to-[#168477] px-12 py-14 text-white lg:order-1 lg:flex lg:flex-col lg:justify-center">
                         <div class="absolute -right-24 -top-24 size-72 rounded-full bg-teal-300/15 blur-2xl"></div>
                         <div class="absolute -bottom-32 -left-20 size-80 rounded-full bg-slate-950/30 blur-3xl"></div>
                         <div class="relative z-10 max-w-md">

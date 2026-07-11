@@ -1,15 +1,21 @@
-@props(['showTeam' => true])
+@props(['showTeam' => true, 'topbar' => false])
 
-<flux:dropdown position="bottom" align="start">
-    <button type="button" class="group flex w-full items-center rounded-lg p-1 hover:bg-zinc-800/5 dark:hover:bg-white/10" data-test="sidebar-menu-button">
+<flux:dropdown position="bottom" :align="$topbar ? 'end' : 'start'">
+    <button type="button" @class([
+        'group flex items-center rounded-xl p-2 transition',
+        'admin-topbar-profile bg-[#13746e] pr-4 text-white shadow-sm hover:bg-[#0f625d]' => $topbar,
+        'admin-sidebar-profile w-full border-white/15 bg-white/8 text-white hover:bg-white/15' => ! $topbar,
+    ]) data-test="sidebar-menu-button">
         <flux:avatar :initials="auth()->user()->initials()" size="sm" />
-        <div class="in-data-flux-sidebar-collapsed-desktop:hidden mx-2 grid flex-1 text-start text-sm leading-tight">
-            <span class="truncate font-medium text-zinc-500 group-hover:text-zinc-800 dark:text-white/80 dark:group-hover:text-white">{{ auth()->user()->name }}</span>
+        <div @class(['mx-2 grid flex-1 text-start text-sm leading-tight', 'in-data-flux-sidebar-collapsed-desktop:hidden' => ! $topbar])>
+            <span class="truncate font-semibold text-white">{{ auth()->user()->name }}</span>
             @if($showTeam && auth()->user()->currentTeam)
-                <span class="truncate text-xs text-zinc-400 dark:text-zinc-500">{{ auth()->user()->currentTeam->name }}</span>
+                <span @class(['truncate text-xs', 'text-[#756b62]' => $topbar, 'text-white/65' => ! $topbar])>{{ auth()->user()->currentTeam->name }}</span>
             @endif
         </div>
-        <flux:icon name="chevrons-up-down" variant="micro" class="in-data-flux-sidebar-collapsed-desktop:hidden ms-auto size-4 text-zinc-400 group-hover:text-zinc-800 dark:text-white/80 dark:group-hover:text-white" />
+        @if (! $topbar)
+            <flux:icon name="chevrons-up-down" variant="micro" class="in-data-flux-sidebar-collapsed-desktop:hidden ms-auto size-4 text-white/75 group-hover:text-white" />
+        @endif
     </button>
 
     <flux:menu>
@@ -25,8 +31,8 @@
         </div>
         <flux:menu.separator />
         <flux:menu.radio.group>
-            <flux:menu.item :href="route('profile.edit')" icon="cog" wire:navigate>
-                {{ __('Settings') }}
+            <flux:menu.item :href="route('profile.edit')" icon="identification" wire:navigate>
+                {{ __('Profil') }}
             </flux:menu.item>
             <form method="POST" action="{{ route('logout') }}" class="w-full">
                 @csrf

@@ -92,7 +92,7 @@ new #[Title('Profil Saya')] class extends Component {
     /* @end-chisel-email-verification */
 }; ?>
 
-<section class="min-h-screen bg-slate-50 px-4 py-6 text-slate-900 sm:px-6 lg:px-8">
+<section class="min-h-screen bg-transparent px-4 py-6 text-slate-900 sm:px-6 lg:px-8">
     <div class="mx-auto flex w-full max-w-6xl flex-col gap-6">
         <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -108,7 +108,7 @@ new #[Title('Profil Saya')] class extends Component {
             </a>
         </div>
 
-        <div class="rounded-xl border border-slate-200 bg-white shadow-sm">
+        <div>
             <form id="profile-form" wire:submit="updateProfileInformation">
                 <div class="grid gap-0 lg:grid-cols-[.9fr_1.1fr]">
                 <div class="border-b border-slate-200 p-6 lg:border-b-0 lg:border-r">

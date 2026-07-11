@@ -88,9 +88,9 @@ new #[Title('Edit Pengaduan')] class extends Component
 <section class="mx-auto flex w-full max-w-5xl flex-col gap-6">
     <div class="flex flex-col gap-2">
         <div class="flex items-center gap-2 text-sm text-zinc-500"><a href="{{ route('pengaduan.index') }}" wire:navigate>{{ __('Pengaduan') }}</a><span>/</span><span>{{ __('Edit') }}</span></div>
-        <h1 class="text-2xl font-semibold text-zinc-950 dark:text-white">{{ __('Edit Pengaduan') }}</h1>
+        <h1 class="font-serif text-3xl font-bold text-[#2f241b] sm:text-4xl">{{ __('Edit Pengaduan') }}</h1>
     </div>
-    <form wire:submit="save" class="space-y-5 rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900">
+    <form wire:submit="save" class="space-y-5 rounded-2xl border border-[#dfd4c6] bg-white p-6 shadow-[0_10px_28px_rgba(62,44,29,.10)]">
         <flux:input wire:model="judul" :label="__('Judul')" required />
         <flux:textarea wire:model="isi_pengaduan" :label="__('Isi Pengaduan')" rows="6" required />
         <flux:select wire:model="status" :label="__('Status')">

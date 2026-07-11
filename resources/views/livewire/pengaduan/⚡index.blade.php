@@ -25,7 +25,14 @@ new #[Title('Pengaduan')] class extends Component
     public string $status = '';
 
     #[Url]
-    public string $cakupan = 'semua';
+    public string $cakupan = 'saya';
+
+    public function mount(): void
+    {
+        if (! request()->query->has('cakupan') && ! auth()->user()->hasRole('Masyarakat')) {
+            $this->cakupan = 'semua';
+        }
+    }
 
     public function updatedSearch(): void
     {
@@ -139,32 +146,53 @@ new #[Title('Pengaduan')] class extends Component
                 <span>{{ __('Layanan') }}</span><span>/</span><span class="font-medium text-zinc-800 dark:text-zinc-100">{{ __('Pengaduan') }}</span>
             </div>
             <div>
-                <h1 class="text-2xl font-semibold text-zinc-950 dark:text-white">{{ __('Pengaduan') }}</h1>
-                <p class="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{{ __('Pantau dan kelola laporan masyarakat.') }}</p>
+                <h1 class="font-serif text-3xl font-bold text-[#2f241b] sm:text-4xl">{{ __('Pengaduan Masyarakat') }}</h1>
+                <p class="mt-2 text-sm leading-6 text-[#625b53] sm:text-base">{{ __('Sampaikan aspirasi dan pantau perkembangan laporan masyarakat secara terbuka.') }}</p>
             </div>
         </div>
     </div>
 
-    <div class="rounded-lg border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900">
+    <div class="overflow-hidden rounded-2xl border border-[#dfd4c6] bg-white/95 shadow-[0_10px_28px_rgba(62,44,29,.10)]">
         <div class="flex flex-col gap-3 border-b border-zinc-200 p-4 dark:border-zinc-700 sm:flex-row sm:items-center sm:justify-between">
-            <flux:radio.group wire:model.live="cakupan" variant="segmented">
-                <flux:radio value="semua">{{ __('Semua Pengaduan') }}</flux:radio>
-                <flux:radio value="saya">{{ __('Pengaduan Saya') }}</flux:radio>
-            </flux:radio.group>
+            <div class="inline-flex w-fit rounded-xl bg-[#f1eee9] p-1 shadow-inner ring-1 ring-[#dfd4c6]">
+                <label class="cursor-pointer rounded-lg px-4 py-2 text-sm font-semibold text-[#655b52] transition has-[:checked]:bg-[#13746e] has-[:checked]:text-white has-[:checked]:shadow-md">
+                    <input type="radio" wire:model.live="cakupan" value="saya" class="sr-only">
+                    {{ __('Pengaduan Saya') }}
+                </label>
+                <label class="cursor-pointer rounded-lg px-4 py-2 text-sm font-semibold text-[#655b52] transition has-[:checked]:bg-[#13746e] has-[:checked]:text-white has-[:checked]:shadow-md">
+                    <input type="radio" wire:model.live="cakupan" value="semua" class="sr-only">
+                    {{ __('Semua Pengaduan') }}
+                </label>
+            </div>
 
             @can('pengaduan.create')
                 <flux:button icon="plus" variant="primary" :href="route('pengaduan.create')" wire:navigate>{{ __('Buat Pengaduan') }}</flux:button>
             @endcan
         </div>
 
-        <div class="grid gap-3 border-b border-zinc-200 p-4 dark:border-zinc-700 md:grid-cols-[1fr_220px]">
-            <flux:input wire:model.live.debounce.400ms="search" icon="magnifying-glass" :placeholder="__('Cari pengaduan')" />
-            <flux:select wire:model.live="status">
-                <flux:select.option value="">{{ __('Semua Status') }}</flux:select.option>
-                @foreach (Pengaduan::STATUSES as $statusOption)
-                    <flux:select.option value="{{ $statusOption }}">{{ $statusOption }}</flux:select.option>
-                @endforeach
-            </flux:select>
+        <div class="border-b border-[#dfd4c6] p-4">
+            <div class="rounded-2xl border border-[#7c5a3c]/30 bg-[linear-gradient(135deg,#776352,#9b7b5a_48%,#6d5543)] p-2.5 shadow-[0_8px_18px_rgba(69,48,29,0.22)]">
+                <div class="grid gap-2.5 md:grid-cols-[1fr_240px]">
+                    <label class="flex min-h-14 items-center gap-3 rounded-xl bg-white px-4 shadow-inner ring-1 ring-black/5 focus-within:ring-2 focus-within:ring-[#17827a]">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-6 w-6 shrink-0 text-[#77716b]">
+                            <circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>
+                        </svg>
+                        <input wire:model.live.debounce.400ms="search" type="search" placeholder="{{ __('Cari pengaduan masyarakat...') }}" class="min-w-0 flex-1 border-0 bg-transparent text-base text-[#332b25] outline-none placeholder:text-[#8a8580] focus:ring-0">
+                    </label>
+
+                    <div class="relative">
+                        <select wire:model.live="status" aria-label="{{ __('Filter status pengaduan') }}" class="min-h-14 w-full appearance-none rounded-xl border-0 bg-[#f4e9d5] bg-none px-4 pr-12 text-base font-semibold text-[#352b22] shadow-inner outline-none ring-1 ring-black/10 focus:ring-2 focus:ring-[#17827a]" style="background-image: none;">
+                            <option value="">{{ __('Semua Status') }}</option>
+                            @foreach (Pengaduan::STATUSES as $statusOption)
+                                <option value="{{ $statusOption }}">{{ $statusOption }}</option>
+                            @endforeach
+                        </select>
+                        <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" class="pointer-events-none absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#554536]">
+                            <path d="m6 8 4 4 4-4" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
         </div>
         <div class="overflow-x-auto">
             <table class="w-full text-left text-sm">
@@ -172,36 +200,66 @@ new #[Title('Pengaduan')] class extends Component
                     <tr>
                         <th class="px-4 py-3">{{ __('Judul') }}</th>
                         <th class="px-4 py-3">{{ __('Tanggal') }}</th>
-                        <th class="px-4 py-3">{{ __('Status') }}</th>
-                        <th class="px-4 py-3">{{ __('Sifat') }}</th>
-                        <th class="w-72 px-4 py-3 text-center">{{ __('Aksi') }}</th>
+                        <th class="px-4 py-3 text-center">{{ __('Status') }}</th>
+                        <th class="px-4 py-3 text-center">{{ __('Sifat') }}</th>
+                        <th class="w-96 px-4 py-3 text-center">{{ __('Aksi') }}</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
                     @forelse ($this->pengaduan as $item)
+                        @php
+                            [$statusClasses, $statusDot] = match ($item->status) {
+                                Pengaduan::STATUS_SELESAI => ['bg-emerald-100 text-emerald-800 ring-emerald-600/20', 'bg-emerald-500'],
+                                Pengaduan::STATUS_DIPROSES => ['bg-sky-100 text-sky-800 ring-sky-600/20', 'bg-sky-500'],
+                                Pengaduan::STATUS_DITOLAK => ['bg-red-100 text-red-800 ring-red-600/20', 'bg-red-500'],
+                                default => ['bg-amber-100 text-amber-800 ring-amber-600/20', 'bg-amber-400'],
+                            };
+                        @endphp
                         <tr>
                             <td class="px-4 py-3 font-medium text-zinc-950 dark:text-white">{{ $item->judul }}</td>
                             <td class="px-4 py-3 text-zinc-600 dark:text-zinc-300">{{ $item->created_at->format('d M Y') }}</td>
-                            <td class="px-4 py-3 text-zinc-600 dark:text-zinc-300">{{ $item->status }}</td>
-                            <td class="px-4 py-3 text-zinc-600 dark:text-zinc-300">{{ $item->visibilitas }}</td>
+                            <td class="px-4 py-3 text-center">
+                                <span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold ring-1 ring-inset {{ $statusClasses }}">
+                                    <span class="h-1.5 w-1.5 rounded-full {{ $statusDot }}"></span>
+                                    {{ $item->status }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3 text-center text-zinc-600 dark:text-zinc-300">
+                                <span class="inline-flex items-center justify-center gap-1.5 font-medium">
+                                    @if ($item->visibilitas === Pengaduan::VISIBILITAS_PRIVAT)
+                                        <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" class="h-4 w-4 text-[#715744]">
+                                            <rect x="4" y="8" width="12" height="9" rx="2"/>
+                                            <path d="M7 8V6a3 3 0 0 1 6 0v2" stroke-linecap="round"/>
+                                        </svg>
+                                    @endif
+                                    {{ $item->visibilitas }}
+                                </span>
+                            </td>
                             <td class="px-4 py-3">
-                                <div class="grid grid-cols-[4rem_1fr_4rem] items-center gap-2 whitespace-nowrap">
-                                    <div></div>
+                                <div class="relative flex min-h-9 items-center justify-center whitespace-nowrap">
+                                    <div class="flex justify-center">
+                                        <a href="{{ route('pengaduan.show', $item) }}" wire:navigate class="inline-flex min-w-20 items-center justify-center rounded-lg bg-[#13746e] px-3 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-[#0f625d]">
+                                            {{ __('Detail') }}
+                                        </a>
+                                    </div>
 
-                                    <div class="flex items-center justify-center gap-1.5">
-                                        <flux:button size="sm" variant="ghost" class="min-w-20 justify-center" :href="route('pengaduan.show', $item)" wire:navigate>{{ __('Detail') }}</flux:button>
+                                    <div class="absolute left-[calc(50%+3rem)] flex justify-center">
                                         @can('pengaduan.ingatkan')
                                             @if ($item->user_id === auth()->id() && $item->isMenunggu())
                                                 @if ($item->isReminderOnCooldown())
-                                                    <flux:button size="sm" variant="ghost" class="min-w-20 justify-center" disabled>{{ __('Cooldown') }}</flux:button>
+                                                    <button type="button" class="inline-flex min-w-20 cursor-not-allowed items-center justify-center rounded-lg bg-zinc-200 px-3 py-2 text-xs font-bold text-zinc-500" disabled>
+                                                        {{ __('Cooldown') }}
+                                                    </button>
                                                 @else
-                                                    <flux:button size="sm" variant="ghost" class="min-w-20 justify-center" wire:click="remind({{ $item->id }})">{{ __('Ingatkan') }}</flux:button>
+                                                    <button type="button" wire:click="remind({{ $item->id }})" class="inline-flex min-w-20 items-center justify-center rounded-lg bg-red-600 px-3 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-red-700">
+                                                        {{ __('Ingatkan') }}
+                                                    </button>
                                                 @endif
                                             @endif
                                         @endcan
                                     </div>
 
-                                    <div class="flex justify-end">
+                                    <div class="absolute right-0 flex justify-end">
                                         @can('update', $item)
                                             <flux:button size="sm" variant="ghost" icon="pencil" :href="route('pengaduan.edit', $item)" wire:navigate />
                                         @endcan

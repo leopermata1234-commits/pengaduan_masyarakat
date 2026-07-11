@@ -215,28 +215,28 @@ new #[Title('Detail Pengaduan')] class extends Component
 };
 ?>
 
-<section class="mx-auto w-full max-w-6xl overflow-hidden rounded-lg bg-zinc-200 text-zinc-950 shadow-sm dark:bg-zinc-900 dark:text-white">
-    <div class="flex items-center justify-between gap-4 bg-zinc-300 px-4 py-3 dark:bg-zinc-800">
+<section class="mx-auto w-full max-w-6xl overflow-hidden rounded-2xl border border-[#dfd4c6] bg-white text-[#332920] shadow-[0_12px_30px_rgba(62,44,29,.12)]">
+    <div class="flex items-center justify-between gap-4 bg-[linear-gradient(135deg,#116d68,#17827a)] px-5 py-4 text-white">
         <div class="flex min-w-0 items-center gap-3">
-            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-zinc-400 text-zinc-600 dark:bg-zinc-700 dark:text-zinc-300">
+            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/20 text-white ring-1 ring-white/30">
                 <flux:icon name="user" class="size-5" />
             </div>
             <div class="min-w-0">
                 <p class="truncate text-base font-bold">{{ $pengaduan->user->name }}</p>
-                <span class="inline-flex rounded bg-zinc-100 px-2 py-0.5 text-xs font-semibold text-zinc-700 dark:bg-zinc-700 dark:text-zinc-100">
+                <span class="inline-flex rounded bg-white/15 px-2 py-0.5 text-xs font-semibold text-white/90">
                     {{ $pengaduan->created_at->format('d M Y') }}
                 </span>
             </div>
         </div>
 
-        <a href="{{ route('pengaduan.index') }}" wire:navigate class="h-6 w-16 rounded-md bg-zinc-100 text-center text-xs font-semibold leading-6 text-zinc-600 transition hover:bg-white dark:bg-zinc-700 dark:text-zinc-200">
-            {{ __('Back') }}
+        <a href="{{ route('pengaduan.index') }}" wire:navigate class="rounded-lg bg-white/15 px-4 py-2 text-center text-xs font-semibold text-white ring-1 ring-white/25 transition hover:bg-white/25">
+            {{ __('Kembali') }}
         </a>
     </div>
 
     <div class="space-y-5 px-4 py-6">
         <div class="max-w-3xl">
-            <h1 class="text-2xl font-bold leading-8">{{ $pengaduan->judul }}</h1>
+            <h1 class="font-serif text-3xl font-bold leading-9 text-[#2f241b]">{{ $pengaduan->judul }}</h1>
             <p class="mt-3 whitespace-pre-line text-sm leading-6 text-zinc-800 dark:text-zinc-200">{{ $pengaduan->isi_pengaduan }}</p>
         </div>
 

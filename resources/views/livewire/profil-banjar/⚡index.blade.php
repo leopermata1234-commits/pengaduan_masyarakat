@@ -23,7 +23,7 @@ new #[Title('Profil Banjar')] class extends Component
         </div>
 
         <div class="flex flex-col gap-1">
-            <h1 class="text-3xl font-bold tracking-normal text-zinc-950 dark:text-white">{{ __('Profil Banjar') }}</h1>
+            <h1 class="font-serif text-3xl font-bold tracking-tight text-[#2f241b] sm:text-4xl">{{ __('Profil Banjar') }}</h1>
             <p class="max-w-3xl text-sm leading-6 text-zinc-600 dark:text-zinc-400">
                 {{ __('Informasi umum Banjar Puluk-Puluk, mulai dari visi misi, peta lokasi, hingga struktur organisasi pengurus banjar.') }}
             </p>
@@ -31,16 +31,16 @@ new #[Title('Profil Banjar')] class extends Component
     </div>
 
     <div class="grid gap-6 lg:grid-cols-[1fr_1.3fr]">
-        <article class="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
+        <article class="rounded-2xl border border-[#dfd4c6] bg-white p-6 shadow-[0_8px_22px_rgba(62,44,29,.10)]">
             <p class="text-sm font-semibold uppercase tracking-normal text-[#34A99D]">{{ __('1. Visi') }}</p>
             <h2 class="mt-3 text-2xl font-semibold leading-8 text-zinc-950 dark:text-white">{{ __('Mewujudkan Banjar Puluk-Puluk yang harmonis, tertib, transparan, dan berdaya dalam pelayanan masyarakat.') }}</h2>
         </article>
 
-        <article class="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
+        <article class="rounded-2xl border border-[#dfd4c6] bg-white p-6 shadow-[0_8px_22px_rgba(62,44,29,.10)]">
             <p class="text-sm font-semibold uppercase tracking-normal text-[#34A99D]">{{ __('Misi') }}</p>
             <div class="mt-4 grid gap-3 sm:grid-cols-2">
                 @foreach ($missions as $mission)
-                    <div class="rounded-lg border border-[#34A99D]/20 bg-[#EAF8F6] p-4 text-sm leading-6 text-zinc-700 dark:border-[#34A99D]/30 dark:bg-[#34A99D]/10 dark:text-zinc-200">
+                    <div class="rounded-xl border border-[#13746e]/20 bg-[#edf8f5] p-4 text-sm leading-6 text-[#554d45]">
                         {{ $mission }}
                     </div>
                 @endforeach

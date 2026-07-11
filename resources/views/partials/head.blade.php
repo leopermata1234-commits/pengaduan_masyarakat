@@ -10,4 +10,16 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
 @vite(['resources/css/app.css', 'resources/js/app.js'])
-@fluxAppearance
+<meta name="color-scheme" content="light">
+<script>
+    document.documentElement.classList.remove('dark');
+    document.documentElement.classList.add('light');
+    document.documentElement.style.colorScheme = 'light';
+
+    new MutationObserver(() => {
+        if (document.documentElement.classList.contains('dark')) {
+            document.documentElement.classList.remove('dark');
+            document.documentElement.classList.add('light');
+        }
+    }).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+</script>

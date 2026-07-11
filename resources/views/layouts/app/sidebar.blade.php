@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="light">
     <head>
         @include('partials.head')
     </head>
-    <body class="min-h-screen {{ (! auth()->check() || auth()->user()->hasRole('Masyarakat')) && request()->routeIs('beranda', 'profil-banjar.*', 'program.*', 'dokumentasi.*', 'pengaduan.*') ? 'bg-[#F4FAF9]' : 'bg-white' }} dark:bg-zinc-800">
+    <body class="min-h-screen {{ auth()->check() && ! auth()->user()->hasRole('Masyarakat') ? 'admin-workspace' : '' }} {{ (! auth()->check() || auth()->user()->hasRole('Masyarakat')) && request()->routeIs('beranda', 'profil-banjar.*', 'program.*', 'dokumentasi.*', 'pengaduan.*') ? 'overflow-x-hidden overflow-y-auto bg-[#F4FAF9]' : 'bg-white' }} dark:bg-zinc-800">
         @if (auth()->check() && ! auth()->user()->hasRole('Masyarakat'))
-            <flux:sidebar sticky collapsible="mobile" class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
+            <flux:sidebar sticky collapsible="mobile" class="admin-sidebar border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
                 <flux:sidebar.header>
                     <div class="flex w-full items-center gap-2">
                         <x-app-logo :sidebar="true" href="{{ route('dashboard') }}" wire:navigate class="min-w-0 flex-1" />
@@ -70,13 +70,11 @@
                     @endcanany
                 </flux:sidebar.nav>
 
-                <flux:spacer />
-
-                <x-desktop-user-menu class="hidden lg:block" :showTeam="false" />
+            <flux:spacer />
             </flux:sidebar>
 
             <!-- Mobile User Menu -->
-            <flux:header class="lg:hidden">
+            <flux:header class="admin-mobile-header lg:hidden">
                 <flux:sidebar.toggle class="lg:hidden" icon="bars-2" inset="left" />
 
                 <flux:spacer />
@@ -84,10 +82,10 @@
                 <livewire:notifications.pengaduan-bell />
 
                 <flux:dropdown position="top" align="end">
-                    <flux:profile
-                        :initials="auth()->user()->initials()"
-                        icon-trailing="chevron-down"
-                    />
+                <button type="button" class="flex items-center gap-3 rounded-xl px-2 py-1.5 text-white transition hover:bg-white/10">
+                    <flux:avatar :initials="auth()->user()->initials()" size="sm" />
+                    <span class="hidden text-base font-medium sm:inline">{{ auth()->user()->name }}</span>
+                </button>
 
                     <flux:menu>
                         <flux:menu.radio.group>
@@ -109,8 +107,8 @@
                         <flux:menu.separator />
 
                         <flux:menu.radio.group>
-                            <flux:menu.item :href="route('profile.edit')" icon="cog" wire:navigate>
-                                {{ __('Settings') }}
+                            <flux:menu.item :href="route('profile.edit')" icon="identification" wire:navigate>
+                                {{ __('Profil') }}
                             </flux:menu.item>
                         </flux:menu.radio.group>
 

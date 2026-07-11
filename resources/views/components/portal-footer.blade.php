@@ -1,4 +1,4 @@
-<footer {{ $attributes->class(['w-full overflow-hidden bg-[#17645D] py-10 text-white shadow-sm']) }}>
+<footer {{ $attributes->class(['portal-footer w-full overflow-hidden py-10 text-white shadow-sm']) }}>
     <div class="grid w-full gap-10 px-6 lg:grid-cols-2 lg:px-12">
         <div class="space-y-5">
             <div class="flex items-center gap-3">
