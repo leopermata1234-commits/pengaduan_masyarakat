@@ -20,7 +20,7 @@
             <div class="space-y-3 text-sm leading-6 text-white/80">
                 <p>{{ __('+62 896-5499-3430') }}</p>
                 <p>{{ __('layanan.banjarpulukpuluk@gmail.com') }}</p>
-                <p>{{ __('Banjar Puluk-Puluk, Desa Senganan, Kecamatan Penebel, Kabupaten Tabanan, Provinsi Bali') }}</p>
+                <p>{{ __('Banjar Puluk-Puluk, Desa Tengkudak, Kecamatan Penebel, Kabupaten Tabanan, Provinsi Bali') }}</p>
             </div>
         </div>
     </div>

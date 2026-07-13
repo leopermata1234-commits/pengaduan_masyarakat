@@ -128,7 +128,7 @@ select:focus[data-flux-control] {
 .public-portal select[data-flux-control] {
     border-color: #d8c9b8;
     border-radius: .75rem;
-    background: #fffdf9;
+    background-color: #fffdf9;
 }
 
 .public-portal input[data-flux-control]:focus,

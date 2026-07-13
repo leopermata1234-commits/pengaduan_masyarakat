@@ -99,7 +99,7 @@ new #[Title('Profil Banjar')] class extends Component
                 </div>
                 <div>
                     <p class="font-semibold text-zinc-950 dark:text-white">{{ __('Desa') }}</p>
-                    <p>{{ __('Desa Senganan') }}</p>
+                    <p>{{ __('Desa Tengkudak') }}</p>
                 </div>
                 <div>
                     <p class="font-semibold text-zinc-950 dark:text-white">{{ __('Kecamatan') }}</p>
