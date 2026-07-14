@@ -22,14 +22,14 @@ use Spatie\Permission\Traits\HasRoles;
 /**
  * @property int $id
  * @property string $name
- * @property string $email
+ * @property string|null $email
  * @property string|null $phone
  * @property string|null $nik
  * @property string|null $kk
  * @property Carbon|null $tanggal_lahir
  * @property string|null $jenis_kelamin
  * @property Carbon|null $email_verified_at
- * @property string $password
+ * @property string|null $password
  * @property string|null $two_factor_secret
  * @property string|null $two_factor_recovery_codes
  * @property Carbon|null $two_factor_confirmed_at

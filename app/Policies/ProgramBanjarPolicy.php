@@ -15,7 +15,7 @@ class ProgramBanjarPolicy
     public function view(?User $user, ProgramBanjar $programBanjar): bool
     {
         if (! $user) {
-            return in_array($programBanjar->status, [ProgramBanjar::STATUS_BERJALAN, ProgramBanjar::STATUS_SELESAI], true);
+            return in_array($programBanjar->status, ProgramBanjar::PUBLIC_STATUSES, true);
         }
 
         if (! $user->can('program.view')) {
@@ -23,7 +23,7 @@ class ProgramBanjarPolicy
         }
 
         return ! $user->hasRole('Masyarakat')
-            || in_array($programBanjar->status, [ProgramBanjar::STATUS_BERJALAN, ProgramBanjar::STATUS_SELESAI], true);
+            || in_array($programBanjar->status, ProgramBanjar::PUBLIC_STATUSES, true);
     }
 
     public function create(User $user): bool

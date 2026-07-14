@@ -29,6 +29,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::livewire('data-masyarakat', 'data-masyarakat.index')
         ->middleware('permission:data.masyarakat')
         ->name('data-masyarakat.index');
+    Route::livewire('data-masyarakat/create', 'data-masyarakat.create')
+        ->middleware('permission:create.data.warga')
+        ->name('data-masyarakat.create');
+    Route::livewire('data-masyarakat/{user}/edit', 'data-masyarakat.edit')
+        ->middleware('permission:edit.data.warga')
+        ->name('data-masyarakat.edit');
 
     Route::livewire('roles', 'roles.index')
         ->middleware('permission:role.view')

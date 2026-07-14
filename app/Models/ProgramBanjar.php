@@ -9,17 +9,24 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ProgramBanjar extends Model
 {
+    public const STATUS_DRAFT = 'Draft';
+
     public const STATUS_RENCANA = 'Rencana';
 
     public const STATUS_BERJALAN = 'Berjalan';
 
     public const STATUS_SELESAI = 'Selesai';
 
-    public const STATUS_DRAFT = self::STATUS_RENCANA;
-
-    public const STATUS_PUBLISHED = self::STATUS_BERJALAN;
+    public const STATUS_PUBLISHED = self::STATUS_RENCANA;
 
     public const STATUSES = [
+        self::STATUS_DRAFT,
+        self::STATUS_RENCANA,
+        self::STATUS_BERJALAN,
+        self::STATUS_SELESAI,
+    ];
+
+    public const PUBLIC_STATUSES = [
         self::STATUS_RENCANA,
         self::STATUS_BERJALAN,
         self::STATUS_SELESAI,

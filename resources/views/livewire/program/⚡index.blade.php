@@ -43,10 +43,19 @@ new #[Title('Program')] class extends Component
     private function statusClasses(ProgramBanjar $program): string
     {
         return match ($program->status) {
+            ProgramBanjar::STATUS_DRAFT => 'bg-zinc-200 text-zinc-700',
             ProgramBanjar::STATUS_BERJALAN => 'bg-[#9bd329] text-[#20320b]',
             ProgramBanjar::STATUS_SELESAI => 'bg-[#d9a2a0] text-[#4b2322]',
             default => 'bg-[#e6c879] text-[#49370d]',
         };
+    }
+
+    /** @return array<int, string> */
+    public function statusOptions(): array
+    {
+        return ! auth()->check() || auth()->user()->hasRole('Masyarakat')
+            ? ProgramBanjar::PUBLIC_STATUSES
+            : ProgramBanjar::STATUSES;
     }
 
     #[Computed]
@@ -54,7 +63,7 @@ new #[Title('Program')] class extends Component
     {
         return ProgramBanjar::query()
             ->with('user')
-            ->when(! auth()->check() || auth()->user()->hasRole('Masyarakat'), fn (Builder $query) => $query->whereIn('status', [ProgramBanjar::STATUS_BERJALAN, ProgramBanjar::STATUS_SELESAI]))
+            ->when(! auth()->check() || auth()->user()->hasRole('Masyarakat'), fn (Builder $query) => $query->whereIn('status', ProgramBanjar::PUBLIC_STATUSES))
             ->when($this->search !== '', fn (Builder $query) => $query->where(fn (Builder $query) => $query->where('judul', 'like', "%{$this->search}%")->orWhere('deskripsi', 'like', "%{$this->search}%")))
             ->when($this->status !== '', fn (Builder $query) => $query->where('status', $this->status))
             ->latest('tanggal_mulai')
@@ -128,7 +137,7 @@ new #[Title('Program')] class extends Component
             <div class="relative">
                 <select wire:model.live="status" aria-label="{{ __('Filter status program') }}" class="min-h-14 w-full appearance-none rounded-xl border-0 bg-[#f4e9d5] bg-none px-4 pr-12 text-base font-semibold text-[#352b22] shadow-inner outline-none ring-1 ring-black/10 focus:ring-2 focus:ring-[#17827a]" style="background-image: none;">
                     <option value="">{{ __('Semua Status') }}</option>
-                    @foreach (ProgramBanjar::STATUSES as $statusOption)
+                    @foreach ($this->statusOptions() as $statusOption)
                         <option value="{{ $statusOption }}">{{ $statusOption }}</option>
                     @endforeach
                 </select>
@@ -188,7 +197,9 @@ new #[Title('Program')] class extends Component
                                     @canany(['program.edit', 'program.delete'])
                                         <div class="flex shrink-0 gap-1">
                                             @can('program.edit')
-                                                @if ($item->status === ProgramBanjar::STATUS_RENCANA)
+                                                @if ($item->status === ProgramBanjar::STATUS_DRAFT)
+                                                    <flux:button size="sm" variant="ghost" icon="eye" wire:click="setStatus({{ $item->id }}, '{{ ProgramBanjar::STATUS_RENCANA }}')" />
+                                                @elseif ($item->status === ProgramBanjar::STATUS_RENCANA)
                                                     <flux:button size="sm" variant="ghost" icon="play" wire:click="setStatus({{ $item->id }}, '{{ ProgramBanjar::STATUS_BERJALAN }}')" />
                                                 @elseif ($item->status === ProgramBanjar::STATUS_BERJALAN)
                                                     <flux:button size="sm" variant="ghost" icon="check" wire:click="setStatus({{ $item->id }}, '{{ ProgramBanjar::STATUS_SELESAI }}')" />

@@ -42,7 +42,9 @@ class ProgramBanjarFactory extends Factory
 
     public function published(): static
     {
-        return $this->berjalan();
+        return $this->state(fn (array $attributes) => [
+            'status' => ProgramBanjar::STATUS_RENCANA,
+        ]);
     }
 
     public function selesai(): static

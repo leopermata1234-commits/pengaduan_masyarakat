@@ -8,7 +8,7 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 use Spatie\Permission\Models\Role;
 
-new #[Title('Tambah User')] class extends Component
+new #[Title('Tambah Akun')] class extends Component
 {
     public string $name = '';
 
@@ -53,11 +53,11 @@ new #[Title('Tambah User')] class extends Component
 <section class="mx-auto flex w-full max-w-3xl flex-col gap-6">
     <div class="flex flex-col gap-2">
         <div class="flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400">
-            <a href="{{ route('users.index') }}" wire:navigate>{{ __('Users') }}</a>
+            <a href="{{ route('users.index') }}" wire:navigate>{{ __('Manajemen Akun') }}</a>
             <span>/</span>
             <span class="font-medium text-zinc-800 dark:text-zinc-100">{{ __('Tambah') }}</span>
         </div>
-        <h1 class="text-2xl font-semibold text-zinc-950 dark:text-white">{{ __('Tambah User') }}</h1>
+        <h1 class="text-2xl font-semibold text-zinc-950 dark:text-white">{{ __('Tambah Akun') }}</h1>
     </div>
 
     <form wire:submit="save" class="space-y-5 rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900">

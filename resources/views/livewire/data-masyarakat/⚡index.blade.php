@@ -2,6 +2,7 @@
 
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
@@ -17,6 +18,17 @@ new #[Title('Data Masyarakat')] class extends Component
 
     public function updatedSearch(): void
     {
+        $this->resetPage();
+    }
+
+    public function delete(int $userId): void
+    {
+        Gate::authorize('delete.data.warga');
+
+        $user = User::query()->findOrFail($userId);
+        abort_unless($user->hasRole('Masyarakat'), 404);
+
+        $user->delete();
         $this->resetPage();
     }
 
@@ -48,9 +60,15 @@ new #[Title('Data Masyarakat')] class extends Component
             </div>
             <div>
                 <h1 class="text-2xl font-semibold text-zinc-950 dark:text-white">{{ __('Data Masyarakat') }}</h1>
-                <p class="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{{ __('Daftar masyarakat banjar yang sudah registrasi di sistem.') }}</p>
+                <p class="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{{ __('Informasi kependudukan masyarakat, baik yang registrasi mandiri maupun yang didata oleh admin.') }}</p>
             </div>
         </div>
+
+        @can('create.data.warga')
+            <a href="{{ route('data-masyarakat.create') }}" wire:navigate class="inline-flex items-center justify-center gap-2 rounded-xl bg-[#13746e] px-5 py-3 text-sm font-bold text-white shadow-md transition hover:-translate-y-0.5 hover:bg-[#0f625d]">
+                <span class="text-lg leading-none">+</span>{{ __('Tambah Data Warga') }}
+            </a>
+        @endcan
     </div>
 
     <div class="rounded-lg border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900">
@@ -67,8 +85,7 @@ new #[Title('Data Masyarakat')] class extends Component
                         <th class="px-4 py-3">{{ __('KK') }}</th>
                         <th class="px-4 py-3">{{ __('Tanggal Lahir') }}</th>
                         <th class="px-4 py-3">{{ __('Jenis Kelamin') }}</th>
-                        <th class="px-4 py-3">{{ __('No. HP') }}</th>
-                        <th class="px-4 py-3">{{ __('Email') }}</th>
+                        <th class="w-32 px-4 py-3 text-right">{{ __('Aksi') }}</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
@@ -79,12 +96,20 @@ new #[Title('Data Masyarakat')] class extends Component
                             <td class="px-4 py-3 text-zinc-600 dark:text-zinc-300">{{ $user->kk ?: '-' }}</td>
                             <td class="px-4 py-3 text-zinc-600 dark:text-zinc-300">{{ $user->tanggal_lahir?->format('d M Y') ?: '-' }}</td>
                             <td class="px-4 py-3 text-zinc-600 dark:text-zinc-300">{{ $user->jenis_kelamin ?: '-' }}</td>
-                            <td class="px-4 py-3 text-zinc-600 dark:text-zinc-300">{{ $user->phone ?: '-' }}</td>
-                            <td class="px-4 py-3 text-zinc-600 dark:text-zinc-300">{{ $user->email }}</td>
+                            <td class="px-4 py-3">
+                                <div class="flex justify-end gap-1">
+                                    @can('edit.data.warga')
+                                        <flux:button size="sm" variant="ghost" icon="pencil" :href="route('data-masyarakat.edit', $user)" wire:navigate />
+                                    @endcan
+                                    @can('delete.data.warga')
+                                        <flux:button size="sm" variant="ghost" icon="trash" wire:click="delete({{ $user->id }})" wire:confirm="{{ __('Hapus permanen data warga ini? Tindakan ini digunakan untuk warga yang telah meninggal dan tidak dapat dibatalkan.') }}" />
+                                    @endcan
+                                </div>
+                            </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="px-4 py-8 text-center text-zinc-500 dark:text-zinc-400">{{ __('Data masyarakat tidak ditemukan.') }}</td>
+                            <td colspan="6" class="px-4 py-8 text-center text-zinc-500 dark:text-zinc-400">{{ __('Data masyarakat tidak ditemukan.') }}</td>
                         </tr>
                     @endforelse
                 </tbody>

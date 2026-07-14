@@ -24,7 +24,7 @@
 
                         @can('pengaduan.view')
                             <flux:sidebar.item icon="chat-bubble-left-right" :href="route('pengaduan.index')" :current="request()->routeIs('pengaduan.*')" wire:navigate>
-                                {{ __('Pengaduan') }}
+                                {{ __('Tanggapan Pengaduan') }}
                             </flux:sidebar.item>
                         @endcan
 
@@ -45,16 +45,16 @@
                                 {{ __('Data Masyarakat') }}
                             </flux:sidebar.item>
                         @endcan
+
+                        @can('users.view')
+                            <flux:sidebar.item icon="users" :href="route('users.index')" :current="request()->routeIs('users.*')" wire:navigate>
+                                {{ __('Manajemen Akun') }}
+                            </flux:sidebar.item>
+                        @endcan
                     </flux:sidebar.group>
 
-                    @canany(['users.view', 'role.view', 'permission.view'])
+                    @canany(['role.view', 'permission.view'])
                         <flux:sidebar.group :heading="__('Administrasi')" class="grid">
-                            @can('users.view')
-                                <flux:sidebar.item icon="users" :href="route('users.index')" :current="request()->routeIs('users.*')" wire:navigate>
-                                    {{ __('Users') }}
-                                </flux:sidebar.item>
-                            @endcan
-
                             @can('role.view')
                                 <flux:sidebar.item icon="shield-check" :href="route('roles.index')" :current="request()->routeIs('roles.*')" wire:navigate>
                                     {{ __('Roles') }}

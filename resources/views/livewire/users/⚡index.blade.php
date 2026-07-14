@@ -9,7 +9,7 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use Spatie\Permission\Models\Role;
 
-new #[Title('Users')] class extends Component
+new #[Title('Manajemen Akun')] class extends Component
 {
     use WithPagination;
 
@@ -40,6 +40,7 @@ new #[Title('Users')] class extends Component
     {
         return User::query()
             ->with('roles')
+            ->whereNotNull('email')
             ->when($this->search !== '', fn (Builder $query) => $query
                 ->where(fn (Builder $query) => $query
                     ->where('name', 'like', "%{$this->search}%")
@@ -68,16 +69,16 @@ new #[Title('Users')] class extends Component
             <div class="flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400">
                 <span>{{ __('Administrasi') }}</span>
                 <span>/</span>
-                <span class="font-medium text-zinc-800 dark:text-zinc-100">{{ __('Users') }}</span>
+                <span class="font-medium text-zinc-800 dark:text-zinc-100">{{ __('Manajemen Akun') }}</span>
             </div>
             <div>
-                <h1 class="text-2xl font-semibold text-zinc-950 dark:text-white">{{ __('Users') }}</h1>
-                <p class="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{{ __('Kelola akun pengguna dan role akses sistem.') }}</p>
+                <h1 class="text-2xl font-semibold text-zinc-950 dark:text-white">{{ __('Manajemen Akun') }}</h1>
+                <p class="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{{ __('Kelola akun yang memiliki akses login, termasuk Admin, Prajuru, dan Masyarakat beserta role aksesnya.') }}</p>
             </div>
         </div>
 
         @can('users.create')
-            <flux:button icon="plus" variant="primary" :href="route('users.create')" wire:navigate>{{ __('Tambah User') }}</flux:button>
+            <flux:button icon="plus" variant="primary" :href="route('users.create')" wire:navigate>{{ __('Tambah Akun') }}</flux:button>
         @endcan
     </div>
 
@@ -117,7 +118,7 @@ new #[Title('Users')] class extends Component
                                     @endcan
                                     @can('users.delete')
                                         @if (auth()->id() !== $user->id)
-                                            <flux:button size="sm" variant="ghost" icon="trash" wire:click="delete({{ $user->id }})" wire:confirm="{{ __('Hapus user ini?') }}" />
+                                            <flux:button size="sm" variant="ghost" icon="trash" wire:click="delete({{ $user->id }})" wire:confirm="{{ __('Hapus akun ini?') }}" />
                                         @endif
                                     @endcan
                                 </div>
@@ -125,7 +126,7 @@ new #[Title('Users')] class extends Component
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="px-4 py-8 text-center text-zinc-500 dark:text-zinc-400">{{ __('Data user tidak ditemukan.') }}</td>
+                            <td colspan="5" class="px-4 py-8 text-center text-zinc-500 dark:text-zinc-400">{{ __('Data akun tidak ditemukan.') }}</td>
                         </tr>
                     @endforelse
                 </tbody>

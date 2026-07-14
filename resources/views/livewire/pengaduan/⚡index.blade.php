@@ -49,6 +49,11 @@ new #[Title('Pengaduan')] class extends Component
         $this->resetPage();
     }
 
+    public function isMasyarakat(): bool
+    {
+        return auth()->user()->hasRole('Masyarakat');
+    }
+
     #[Computed]
     public function pengaduan()
     {
@@ -143,11 +148,13 @@ new #[Title('Pengaduan')] class extends Component
     <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div class="flex flex-col gap-2">
             <div class="flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400">
-                <span>{{ __('Layanan') }}</span><span>/</span><span class="font-medium text-zinc-800 dark:text-zinc-100">{{ __('Pengaduan') }}</span>
+                <span>{{ __('Layanan') }}</span><span>/</span><span class="font-medium text-zinc-800 dark:text-zinc-100">{{ $this->isMasyarakat() ? __('Pengaduan') : __('Tanggapan Pengaduan') }}</span>
             </div>
             <div>
-                <h1 class="font-serif text-3xl font-bold text-[#2f241b] sm:text-4xl">{{ __('Pengaduan Masyarakat') }}</h1>
-                <p class="mt-2 text-sm leading-6 text-[#625b53] sm:text-base">{{ __('Sampaikan aspirasi dan pantau perkembangan laporan masyarakat secara terbuka.') }}</p>
+                <h1 class="font-serif text-3xl font-bold text-[#2f241b] sm:text-4xl">{{ $this->isMasyarakat() ? __('Pengaduan Masyarakat') : __('Tanggapan Pengaduan') }}</h1>
+                <p class="mt-2 text-sm leading-6 text-[#625b53] sm:text-base">
+                    {{ $this->isMasyarakat() ? __('Sampaikan aspirasi dan pantau perkembangan laporan masyarakat secara terbuka.') : __('Kelola, verifikasi, dan berikan tanggapan terhadap pengaduan masyarakat.') }}
+                </p>
             </div>
         </div>
     </div>

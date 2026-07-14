@@ -20,7 +20,7 @@ return new class extends Migration
             $table->date('tanggal_mulai')->nullable();
             $table->date('tanggal_selesai')->nullable();
             $table->string('gambar')->nullable();
-            $table->string('status')->default('Rencana');
+            $table->string('status')->default('Draft');
             $table->timestamps();
 
             $table->index(['status', 'tanggal_mulai']);

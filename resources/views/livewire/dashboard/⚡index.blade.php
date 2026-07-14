@@ -56,7 +56,7 @@ new #[Title('Dashboard')] class extends Component
     {
         return ProgramBanjar::query()
             ->with('user')
-            ->whereIn('status', [ProgramBanjar::STATUS_BERJALAN, ProgramBanjar::STATUS_SELESAI])
+            ->whereIn('status', ProgramBanjar::PUBLIC_STATUSES)
             ->latest('tanggal_mulai')
             ->limit(3)
             ->get();
@@ -746,7 +746,7 @@ new #[Title('Dashboard')] class extends Component
                             <p class="font-medium text-zinc-950 dark:text-white">{{ $pengaduan->judul }}</p>
                             <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">{{ $pengaduan->user->name }} &middot; {{ $pengaduan->created_at->format('d M Y') }} &middot; {{ $pengaduan->visibilitas }}</p>
                         </div>
-                        <span class="inline-flex w-fit rounded-md border border-zinc-200 px-2 py-1 text-xs font-medium text-zinc-700 dark:border-zinc-700 dark:text-zinc-200">
+                        <span class="inline-flex w-fit rounded-full px-2.5 py-1 text-xs font-bold {{ $this->publicStatusClasses($pengaduan) }}">
                             {{ $pengaduan->status }}
                         </span>
                     </div>

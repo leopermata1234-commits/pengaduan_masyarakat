@@ -27,6 +27,13 @@ new #[Title('Galeri')] class extends Component
         $this->resetPage();
     }
 
+    public function updatedShowDetailModal(bool $isOpen): void
+    {
+        if (! $isOpen) {
+            $this->selectedDokumentasiId = null;
+        }
+    }
+
     #[Computed]
     public function dokumentasi()
     {
@@ -88,7 +95,6 @@ new #[Title('Galeri')] class extends Component
     {
         return '/storage/'.Str::of($foto)->ltrim('/');
     }
-
 };
 ?>
 
@@ -184,14 +190,18 @@ new #[Title('Galeri')] class extends Component
         @if ($this->selectedDokumentasi)
             @php($detailFotoPaths = $this->fotoPaths($this->selectedDokumentasi))
 
-            <div class="space-y-5">
+            <div wire:key="detail-galeri-{{ $this->selectedDokumentasi->id }}" class="space-y-5">
                 <div>
                     <flux:heading size="lg">{{ $this->selectedDokumentasi->judul }}</flux:heading>
                     <flux:subheading>{{ $this->selectedDokumentasi->tanggal->format('d M Y') }}</flux:subheading>
                 </div>
 
                 @if ($detailFotoPaths)
-                    <div x-data="{ active: 0, total: {{ count($detailFotoPaths) }} }" class="relative overflow-hidden rounded-xl border border-[#dfd4c6] bg-[#f5efe6]">
+                    <div
+                        wire:key="foto-galeri-{{ $this->selectedDokumentasi->id }}"
+                        x-data="{ active: 0, total: {{ count($detailFotoPaths) }} }"
+                        class="relative overflow-hidden rounded-xl border border-[#dfd4c6] bg-[#f5efe6]"
+                    >
                         @foreach ($detailFotoPaths as $index => $foto)
                             <img
                                 x-show="active === {{ $index }}"

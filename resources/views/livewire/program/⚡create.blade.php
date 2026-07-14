@@ -14,10 +14,15 @@ new #[Title('Tambah Program')] class extends Component
     use WithFileUploads;
 
     public string $judul = '';
+
     public string $deskripsi = '';
+
     public string $tanggal_mulai = '';
+
     public string $tanggal_selesai = '';
-    public string $status = ProgramBanjar::STATUS_RENCANA;
+
+    public string $status = ProgramBanjar::STATUS_DRAFT;
+
     public ?TemporaryUploadedFile $gambar = null;
 
     /**
